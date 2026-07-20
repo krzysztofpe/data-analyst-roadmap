@@ -58,6 +58,8 @@ struct FocusTimerView: View {
                         Text(timeString)
                             .font(.system(size: 46, weight: .bold, design: .rounded))
                             .monospacedDigit()
+                            .contentTransition(.numericText(countsDown: true))
+                            .animation(.linear(duration: 0.3), value: remaining)
                         Text(stateLabel)
                             .font(.caption)
                             .foregroundColor(.appMuted)
@@ -74,7 +76,11 @@ struct FocusTimerView: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.appAccentDark, in: RoundedRectangle(cornerRadius: 14))
+                            .background(
+                                LinearGradient(colors: [.appAccentDark, Color(hex: 0x9333EA)],
+                                               startPoint: .leading, endPoint: .trailing),
+                                in: RoundedRectangle(cornerRadius: 14)
+                            )
                             .foregroundColor(.white)
                     }
                     Button {

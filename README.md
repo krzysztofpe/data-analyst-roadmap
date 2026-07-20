@@ -24,6 +24,13 @@ bez przytłaczających list, za to z dopaminą.
   kołem oraz uziemienie 5-4-3-2-1 na stres i przytłoczenie. Dostępny jednym
   tapnięciem z nagłówka w każdym miejscu aplikacji.
 - **✨ Dopamina** — XP, poziomy, konfetti, haptyka i pochwały po każdym zrobionym kroku.
+- **🏆 Cel dnia: 3 zadania** — mały, osiągalny cel z pierścieniem postępu;
+  po trzecim zadaniu fanfary, reszta dnia to czysty bonus.
+- **↷ Pomiń** — obecne zadanie blokuje? Odłóż je na później bez poczucia winy
+  i zobacz następne (wraca przy kolejnym uruchomieniu).
+- **📈 Twój tydzień** — miniwykres ukończonych zadań z ostatnich 7 dni.
+- **⚙️ Ustawienia** — statystyki postępów, powtórka wprowadzenia, wymazanie
+  danych (z podwójnym potwierdzeniem).
 - **👋 Onboarding** — 4 szybkie karty przy pierwszym uruchomieniu, bez ściany tekstu.
 - **🔔 Powiadomienie timera** — koniec sesji skupienia da znać nawet przy
   zablokowanym ekranie; odliczanie liczone od daty końcowej, więc działa w tle.
@@ -67,8 +74,9 @@ Ogarnito/
 ├── Notifications.swift      # lokalne powiadomienie o końcu sesji skupienia
 ├── PrivacyInfo.xcprivacy    # manifest prywatności (wymagany przez Apple)
 └── Views/
-    ├── RootView.swift       # TabView, nagłówek XP + SOS, konfetti, pochwały
+    ├── RootView.swift       # TabView, nagłówek XP + SOS + ustawienia, konfetti
     ├── OnboardingView.swift # 4 karty przy pierwszym uruchomieniu
+    ├── SettingsView.swift   # statystyki, prywatność, wymazanie danych
     ├── NowView.swift        # „Teraz" — jedno zadanie, jeden krok, odblokowanie
     ├── TasksView.swift      # brain dump + lista zadań z mikro-krokami
     ├── HabitsView.swift     # nawyki, siatka 7 dni, streaki

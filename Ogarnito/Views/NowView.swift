@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 
 /// Widok „Teraz" — pokazuje JEDNO zadanie i tylko jego następny krok,
 /// żeby nie przytłaczać. Serce aplikacji.
@@ -9,13 +10,37 @@ struct NowView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                greetingHeader
                 nowCard
                 doneTodaySection
+                if store.weekStats.contains(where: { $0.count > 0 }) {
+                    weekCard
+                }
             }
             .padding(16)
         }
         .background(AppBackground())
         .buttonStyle(ScaleButtonStyle())
+    }
+
+    private var greetingHeader: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(greeting)
+                .font(.title3.bold())
+            Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
+                .font(.caption)
+                .foregroundColor(.appMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var greeting: String {
+        switch Calendar.current.component(.hour, from: Date()) {
+        case 5..<12: return "Dzień dobry! ☀️"
+        case 12..<18: return "Miłego popołudnia! 🌤️"
+        case 18..<23: return "Dobry wieczór! 🌙"
+        default: return "Nocna zmiana? 🦉"
+        }
     }
 
     @ViewBuilder
@@ -59,23 +84,14 @@ struct NowView: View {
                 }
 
                 HStack(spacing: 10) {
-                    Button {
-                        store.selectedTab = .tasks
-                    } label: {
-                        Text("🔪 Rozbij")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundColor(.white)
-                    }
-                    Button {
-                        store.selectedTab = .timer
-                    } label: {
-                        Text("⏱️ Skup się")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundColor(.white)
+                    ghostButton("🔪 Rozbij") { store.selectedTab = .tasks }
+                    ghostButton("⏱️ Fokus") { store.selectedTab = .timer }
+                    if store.openTaskCount > 1 {
+                        ghostButton("↷ Pomiń") {
+                            withAnimation(.spring(duration: 0.35)) {
+                                store.skipCurrentTask()
+                            }
+                        }
                     }
                 }
                 .font(.subheadline.bold())
@@ -133,13 +149,27 @@ struct NowView: View {
         .shadow(color: Color.appAccentDark.opacity(0.35), radius: 18, x: 0, y: 8)
     }
 
+    private func ghostButton(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundColor(.white)
+        }
+    }
+
     @ViewBuilder
     private var doneTodaySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("DZISIAJ OGARNIĘTE")
-                .font(.caption.bold())
-                .kerning(1.2)
-                .foregroundColor(.appMuted)
+            HStack {
+                Text("DZISIAJ OGARNIĘTE")
+                    .font(.caption.bold())
+                    .kerning(1.2)
+                    .foregroundColor(.appMuted)
+                Spacer()
+                dailyGoalBadge
+            }
 
             if store.doneToday.isEmpty {
                 Text("Jeszcze nic — i to jest OK. Zacznij od jednej małej rzeczy. 💜")
@@ -162,5 +192,59 @@ struct NowView: View {
                 }
             }
         }
+    }
+
+    /// Cel dnia: 3 zadania. Mały, osiągalny — reszta to bonus.
+    @ViewBuilder
+    private var dailyGoalBadge: some View {
+        let count = store.doneToday.count
+        if count >= 3 {
+            Text("🏆 Cel dnia!")
+                .font(.caption.bold())
+                .foregroundColor(.appWarn)
+        } else {
+            HStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.appCard2, lineWidth: 4)
+                    Circle()
+                        .trim(from: 0, to: CGFloat(count) / 3)
+                        .stroke(Color.appAccent,
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                }
+                .frame(width: 18, height: 18)
+                .animation(.spring(duration: 0.5), value: count)
+                Text("\(count)/3")
+                    .font(.caption.bold())
+                    .foregroundColor(.appMuted)
+            }
+            .accessibilityLabel("Cel dnia: \(count) z 3 zadań")
+        }
+    }
+
+    private var weekCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle("📈 Twój tydzień")
+            Chart(store.weekStats) { stat in
+                BarMark(
+                    x: .value("Dzień", stat.label),
+                    y: .value("Zadania", stat.count)
+                )
+                .cornerRadius(5)
+                .foregroundStyle(stat.isToday ? Color.appAccent : Color.appAccent.opacity(0.35))
+            }
+            .frame(height: 110)
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks { _ in
+                    AxisValueLabel()
+                        .foregroundStyle(Color.appMuted)
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
     }
 }

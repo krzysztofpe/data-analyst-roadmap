@@ -195,9 +195,11 @@ struct CheckCircle: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: size * 0.45, weight: .bold))
                         .foregroundColor(Color(hex: 0x06281C))
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
             .frame(width: size, height: size)
+            .animation(.spring(response: 0.3, dampingFraction: 0.55), value: done)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(done ? "Zrobione — odznacz" : "Oznacz jako zrobione")

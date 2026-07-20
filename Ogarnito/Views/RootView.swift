@@ -45,12 +45,16 @@ struct RootView: View {
 
 struct XPHeader: View {
     @EnvironmentObject var store: AppStore
+    @State private var showSettings = false
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: 10) {
             (Text("⚡ Ogarni") + Text("to").foregroundColor(.appAccent))
                 .font(.title2.bold())
             Spacer()
+            headerCircleButton("gearshape.fill", label: "Ustawienia") {
+                showSettings = true
+            }
             // Szybki dostęp do oddechu ratunkowego z każdego miejsca w apce.
             Button {
                 store.showBreathing = true
@@ -67,14 +71,34 @@ struct XPHeader: View {
                 Text("Poziom \(store.level) · \(store.xp) XP")
                     .font(.caption)
                     .foregroundColor(.appMuted)
+                    .contentTransition(.numericText())
+                    .animation(.spring(duration: 0.4), value: store.xp)
                 ProgressView(value: store.levelProgress)
                     .tint(.appAccent)
                     .frame(width: 110)
+                    .animation(.spring(duration: 0.5), value: store.levelProgress)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(Color.appBg)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+    }
+
+    private func headerCircleButton(_ systemImage: String, label: String,
+                                    action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.subheadline)
+                .frame(width: 38, height: 38)
+                .background(Color.appCard2, in: Circle())
+                .overlay(Circle().stroke(Color.appLine))
+                .foregroundColor(.appMuted)
+        }
+        .buttonStyle(ScaleButtonStyle())
+        .accessibilityLabel(label)
     }
 }
 

@@ -14,6 +14,8 @@ final class AppStore: ObservableObject {
     @Published var showBreathing = false
     /// Ustawiane z innych widoków, żeby timer sam wystartował z zadaną liczbą minut.
     @Published var timerRequest: Int?
+    /// Zadania odłożone „nie teraz" — tylko na czas tej sesji, świeże oczy po restarcie.
+    @Published var skippedIDs: Set<UUID> = []
 
     enum Tab: Hashable { case now, tasks, habits, timer, life }
 
@@ -77,7 +79,23 @@ final class AppStore: ObservableObject {
     /// Jedno zadanie do pokazania w widoku „Teraz": najpierw żaba, potem najnowsze otwarte.
     var currentTask: TodoTask? {
         let open = sortedTasks.filter { !$0.done }
-        return open.first { $0.isFrog } ?? open.first
+        return open.first { $0.isFrog && !skippedIDs.contains($0.id) }
+            ?? open.first { !skippedIDs.contains($0.id) }
+            ?? open.first
+    }
+
+    var openTaskCount: Int { tasks.filter { !$0.done }.count }
+
+    /// „Nie teraz" — pokaż następne otwarte zadanie zamiast obecnego.
+    func skipCurrentTask() {
+        guard let current = currentTask else { return }
+        skippedIDs.insert(current.id)
+        let open = tasks.filter { !$0.done }
+        if open.allSatisfy({ skippedIDs.contains($0.id) }) {
+            // Wszystko pominięte — wracają wszystkie poza właśnie odłożonym.
+            skippedIDs = [current.id]
+        }
+        Haptics.tap()
     }
 
     var doneToday: [TodoTask] {
@@ -110,7 +128,12 @@ final class AppStore: ObservableObject {
         tasks[i].done = true
         tasks[i].doneAt = Date()
         for j in tasks[i].steps.indices { tasks[i].steps[j].done = true }
+        skippedIDs.remove(tasks[i].id)
         reward(10, big: true)
+        if doneToday.count == 3 {
+            praise = "🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus."
+            confettiBurst += 1
+        }
     }
 
     func toggleStep(taskID: TodoTask.ID, stepID: TaskStep.ID) {
@@ -195,6 +218,44 @@ final class AppStore: ObservableObject {
             day = prev
         }
         return count
+    }
+
+    // MARK: - Statystyki tygodnia
+
+    struct DayStat: Identifiable {
+        let id = UUID()
+        let label: String
+        let count: Int
+        let isToday: Bool
+    }
+
+    /// Zadania ukończone w każdym z ostatnich 7 dni — do wykresu w widoku „Teraz".
+    var weekStats: [DayStat] {
+        let cal = Calendar.current
+        return (0..<7).reversed().map { offset in
+            let day = cal.date(byAdding: .day, value: -offset, to: Date()) ?? Date()
+            let key = Dates.dayKey(day)
+            let count = tasks.filter { t in
+                guard let d = t.doneAt else { return false }
+                return Dates.dayKey(d) == key
+            }.count
+            let weekday = cal.component(.weekday, from: day) - 1
+            return DayStat(label: Dates.shortWeekdays[weekday],
+                           count: count,
+                           isToday: offset == 0)
+        }
+    }
+
+    // MARK: - Reset
+
+    func resetAll() {
+        tasks = []
+        habits = []
+        impulses = []
+        care = [:]
+        xp = 0
+        skippedIDs = []
+        save()
     }
 
     // MARK: - Jedzenie i woda

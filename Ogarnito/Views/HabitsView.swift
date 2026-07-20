@@ -61,8 +61,6 @@ struct HabitCard: View {
     let habit: Habit
     @State private var confirmDelete = false
 
-    private static let weekdaySymbols = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"]
-
     private var last7Days: [Date] {
         let cal = Calendar.current
         return (0..<7).reversed().compactMap {
@@ -108,7 +106,7 @@ struct HabitCard: View {
                     let weekday = Calendar.current.component(.weekday, from: day) - 1
 
                     VStack(spacing: 4) {
-                        Text(Self.weekdaySymbols[weekday])
+                        Text(Dates.shortWeekdays[weekday])
                             .font(.caption2)
                             .foregroundColor(.appMuted)
                         Button {

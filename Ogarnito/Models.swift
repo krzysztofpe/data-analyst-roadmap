@@ -65,6 +65,9 @@ enum Dates {
     static func dayKey(_ date: Date = Date()) -> String {
         dayFormatter.string(from: date)
     }
+
+    /// Indeksowane komponentem .weekday - 1 (niedziela = 0).
+    static let shortWeekdays = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"]
 }
 
 // MARK: - Kolory motywu
