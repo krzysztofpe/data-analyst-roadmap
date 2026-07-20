@@ -40,7 +40,7 @@ struct TasksView: View {
             }
             .padding(16)
         }
-        .background(Color.appBg)
+        .background(AppBackground())
         .scrollDismissesKeyboard(.interactively)
     }
 

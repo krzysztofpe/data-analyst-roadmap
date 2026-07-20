@@ -42,7 +42,7 @@ struct HabitsView: View {
             }
             .padding(16)
         }
-        .background(Color.appBg)
+        .background(AppBackground())
         .alert("Nowy nawyk", isPresented: $showingAdd) {
             TextField("np. Szklanka wody rano", text: $newHabitName)
             Button("Dodaj") {

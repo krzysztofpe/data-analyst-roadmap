@@ -4,6 +4,7 @@ import SwiftUI
 /// żeby nie przytłaczać. Serce aplikacji.
 struct NowView: View {
     @EnvironmentObject var store: AppStore
+    @State private var showStuck = false
 
     var body: some View {
         ScrollView {
@@ -13,7 +14,8 @@ struct NowView: View {
             }
             .padding(16)
         }
-        .background(Color.appBg)
+        .background(AppBackground())
+        .buttonStyle(ScaleButtonStyle())
     }
 
     @ViewBuilder
@@ -77,6 +79,32 @@ struct NowView: View {
                     }
                 }
                 .font(.subheadline.bold())
+
+                Button {
+                    showStuck = true
+                } label: {
+                    Text("😩 Nie mogę zacząć")
+                        .font(.footnote.bold())
+                        .foregroundColor(.appMuted)
+                        .padding(.top, 2)
+                }
+                .confirmationDialog(
+                    "Utknięcie to nie lenistwo — mózg potrzebuje rozbiegu. Wybierz odblokowanie:",
+                    isPresented: $showStuck,
+                    titleVisibility: .visible
+                ) {
+                    Button("🤏 2 minuty byle jak — start!") {
+                        store.timerRequest = 2
+                        store.selectedTab = .timer
+                    }
+                    Button("🔪 Rozbij na śmiesznie mały krok") {
+                        store.selectedTab = .tasks
+                    }
+                    Button("🌬️ Najpierw wydech") {
+                        store.showBreathing = true
+                    }
+                    Button("Anuluj", role: .cancel) {}
+                }
             } else {
                 Text("TERAZ")
                     .font(.caption.bold())
@@ -102,6 +130,7 @@ struct NowView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 22).stroke(Color(hex: 0x3B2D63))
         )
+        .shadow(color: Color.appAccentDark.opacity(0.35), radius: 18, x: 0, y: 8)
     }
 
     @ViewBuilder

@@ -9,7 +9,7 @@ struct FocusTimerView: View {
     @State private var remaining = 15 * 60
     @State private var isRunning = false
 
-    private let presets = [5, 15, 25]
+    private let presets = [2, 5, 15, 25]
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var progress: Double {
@@ -89,11 +89,19 @@ struct FocusTimerView: View {
             }
             .padding(16)
         }
-        .background(Color.appBg)
+        .background(AppBackground())
+        .buttonStyle(ScaleButtonStyle())
         .onReceive(tick) { _ in
             guard isRunning else { return }
             remaining -= 1
             if remaining <= 0 { finish() }
+        }
+        .onChange(of: store.timerRequest) {
+            // Inne widoki (np. „Nie mogę zacząć") mogą poprosić o start z zadanym czasem.
+            guard let minutes = store.timerRequest else { return }
+            selectPreset(minutes)
+            start()
+            store.timerRequest = nil
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false

@@ -19,12 +19,18 @@ struct RootView: View {
                 FocusTimerView()
                     .tabItem { Label("Timer", systemImage: "timer") }
                     .tag(AppStore.Tab.timer)
+                LifeView()
+                    .tabItem { Label("Życie", systemImage: "heart.fill") }
+                    .tag(AppStore.Tab.life)
             }
             .tint(.appAccent)
         }
         .background(Color.appBg)
         .overlay(alignment: .top) { PraiseBanner() }
         .overlay(ConfettiOverlay(trigger: store.confettiBurst))
+        .fullScreenCover(isPresented: $store.showBreathing) {
+            BreathingView()
+        }
     }
 }
 
@@ -32,10 +38,21 @@ struct XPHeader: View {
     @EnvironmentObject var store: AppStore
 
     var body: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .center, spacing: 12) {
             (Text("⚡ Ogarni") + Text("to").foregroundColor(.appAccent))
                 .font(.title2.bold())
             Spacer()
+            // Szybki dostęp do oddechu ratunkowego z każdego miejsca w apce.
+            Button {
+                store.showBreathing = true
+            } label: {
+                Text("🌬️")
+                    .font(.title3)
+                    .frame(width: 38, height: 38)
+                    .background(Color.appCard2, in: Circle())
+                    .overlay(Circle().stroke(Color.appLine))
+            }
+            .buttonStyle(ScaleButtonStyle())
             VStack(alignment: .trailing, spacing: 4) {
                 Text("Poziom \(store.level) · \(store.xp) XP")
                     .font(.caption)

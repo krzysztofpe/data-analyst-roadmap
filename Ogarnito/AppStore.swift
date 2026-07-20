@@ -5,12 +5,17 @@ import Combine
 final class AppStore: ObservableObject {
     @Published var tasks: [TodoTask] = []
     @Published var habits: [Habit] = []
+    @Published var impulses: [ImpulseItem] = []
+    @Published var care: [String: DayCare] = [:]
     @Published var xp: Int = 0
     @Published var praise: String?
     @Published var confettiBurst: Int = 0
     @Published var selectedTab: Tab = .now
+    @Published var showBreathing = false
+    /// Ustawiane z innych widoków, żeby timer sam wystartował z zadaną liczbą minut.
+    @Published var timerRequest: Int?
 
-    enum Tab: Hashable { case now, tasks, habits, timer }
+    enum Tab: Hashable { case now, tasks, habits, timer, life }
 
     private var praiseClearTask: Task<Void, Never>?
 
@@ -50,6 +55,12 @@ final class AppStore: ObservableObject {
             guard !Task.isCancelled else { return }
             self?.praise = nil
         }
+        save()
+    }
+
+    /// XP bez fanfar — do drobiazgów typu szklanka wody.
+    func quietXP(_ points: Int) {
+        xp += points
         save()
     }
 
@@ -186,12 +197,85 @@ final class AppStore: ObservableObject {
         return count
     }
 
+    // MARK: - Jedzenie i woda
+
+    var todayCare: DayCare { care[Dates.dayKey()] ?? DayCare() }
+
+    func toggleMeal(_ meal: String) {
+        let key = Dates.dayKey()
+        var c = care[key] ?? DayCare()
+        if c.meals.contains(meal) {
+            c.meals.remove(meal)
+            care[key] = c
+            save()
+        } else {
+            c.meals.insert(meal)
+            care[key] = c
+            reward(2, big: false)
+        }
+    }
+
+    func changeWater(_ delta: Int) {
+        let key = Dates.dayKey()
+        var c = care[key] ?? DayCare()
+        let newValue = max(0, c.water + delta)
+        if newValue > c.water && newValue <= 8 { quietXP(1) }
+        c.water = newValue
+        care[key] = c
+        if delta > 0 { Haptics.tap() }
+        save()
+    }
+
+    // MARK: - Oddech / stres
+
+    func finishBreathing(cycles: Int) {
+        showBreathing = false
+        if cycles >= 3 { reward(6, big: false) }
+    }
+
+    // MARK: - Portfel impulsów
+
+    var pendingImpulses: [ImpulseItem] {
+        impulses.filter { $0.decision == nil }.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    var decidedImpulses: [ImpulseItem] {
+        impulses.filter { $0.decision != nil }
+            .sorted { ($0.decidedAt ?? .distantPast) > ($1.decidedAt ?? .distantPast) }
+    }
+
+    var savedTotal: Double {
+        impulses.filter { $0.decision == .skipped }.reduce(0) { $0 + $1.price }
+    }
+
+    func addImpulse(name: String, price: Double) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        impulses.insert(ImpulseItem(name: trimmed, price: max(0, price)), at: 0)
+        Haptics.tap()
+        save()
+    }
+
+    func decideImpulse(_ id: ImpulseItem.ID, skipped: Bool) {
+        guard let i = impulses.firstIndex(where: { $0.id == id }) else { return }
+        impulses[i].decision = skipped ? .skipped : .bought
+        impulses[i].decidedAt = Date()
+        if skipped {
+            reward(15, big: true)
+        } else {
+            save()
+        }
+    }
+
     // MARK: - Persystencja (JSON w Documents)
 
     private struct Snapshot: Codable {
         var tasks: [TodoTask]
         var habits: [Habit]
         var xp: Int
+        // Nowsze pola jako opcjonalne, żeby starsze zapisy dalej się wczytywały.
+        var impulses: [ImpulseItem]?
+        var care: [String: DayCare]?
     }
 
     private static var fileURL: URL {
@@ -199,7 +283,8 @@ final class AppStore: ObservableObject {
     }
 
     func save() {
-        let snapshot = Snapshot(tasks: tasks, habits: habits, xp: xp)
+        let snapshot = Snapshot(tasks: tasks, habits: habits, xp: xp,
+                                impulses: impulses, care: care)
         do {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: Self.fileURL, options: .atomic)
@@ -214,5 +299,7 @@ final class AppStore: ObservableObject {
         tasks = snapshot.tasks
         habits = snapshot.habits
         xp = snapshot.xp
+        impulses = snapshot.impulses ?? []
+        care = snapshot.care ?? [:]
     }
 }

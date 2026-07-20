@@ -11,8 +11,18 @@ bez przytłaczających list, za to z dopaminą.
   Każde zadanie rozbijesz na mikro-kroki (max 10 minut każdy).
 - **🔥 Nawyki** — siatka ostatnich 7 dni i licznik streaka. Nie przerywaj łańcucha —
   a jak przerwiesz, wracasz następnego dnia, bez dramatu.
-- **⏱️ Timer skupienia** — 5/15/25 minut. Umowa z mózgiem: pracujesz *tylko tyle*,
+- **⏱️ Timer skupienia** — 2/5/15/25 minut. Umowa z mózgiem: pracujesz *tylko tyle*,
   potem możesz przestać. Ekran nie gaśnie w trakcie sesji.
+- **😩 „Nie mogę zacząć"** — odblokowanie prokrastynacji: 2 minuty byle jak,
+  śmiesznie mały krok albo najpierw wydech.
+- **🍽️ Jedzenie i woda** — ADHD-mózg zapomina jeść. Odhaczasz posiłki i szklanki
+  wody w zakładce „Życie" (też nagradzane XP).
+- **💸 Portfel impulsów** — chcesz coś kupić pod wpływem impulsu? Wrzucasz do
+  poczekalni na 48 h. Po odczekaniu decydujesz: kupujesz albo odpuszczasz —
+  apka sumuje zaoszczędzone pieniądze.
+- **🌬️ Oddech ratunkowy** — pełnoekranowy oddech pudełkowy 4-4-4-4 z animowanym
+  kołem oraz uziemienie 5-4-3-2-1 na stres i przytłoczenie. Dostępny jednym
+  tapnięciem z nagłówka w każdym miejscu aplikacji.
 - **✨ Dopamina** — XP, poziomy, konfetti, haptyka i pochwały po każdym zrobionym kroku.
 
 Dane trzymane lokalnie na telefonie (JSON w Documents) — zero kont, zero serwera,
@@ -44,14 +54,16 @@ zero rozpraszaczy. Interfejs w 100% po polsku.
 ```
 Ogarnito/
 ├── OgarnitoApp.swift        # punkt wejścia
-├── Models.swift             # model danych, kolory motywu, haptyka, klucze dni
+├── Models.swift             # model danych, kolory motywu, wspólne UI, haptyka
 ├── AppStore.swift           # stan aplikacji, XP/poziomy, persystencja JSON
 └── Views/
-    ├── RootView.swift       # TabView, nagłówek XP, konfetti, pochwały
-    ├── NowView.swift        # „Teraz" — jedno zadanie, jeden krok
+    ├── RootView.swift       # TabView, nagłówek XP + SOS, konfetti, pochwały
+    ├── NowView.swift        # „Teraz" — jedno zadanie, jeden krok, odblokowanie
     ├── TasksView.swift      # brain dump + lista zadań z mikro-krokami
     ├── HabitsView.swift     # nawyki, siatka 7 dni, streaki
-    └── FocusTimerView.swift # timer skupienia z pierścieniem
+    ├── FocusTimerView.swift # timer skupienia z pierścieniem
+    ├── LifeView.swift       # „Życie": jedzenie, woda, stres, portfel impulsów
+    └── BreathingView.swift  # oddech 4-4-4-4 + uziemienie 5-4-3-2-1
 ```
 
 Czysty SwiftUI, bez zewnętrznych zależności.
