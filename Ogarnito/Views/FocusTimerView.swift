@@ -8,6 +8,9 @@ struct FocusTimerView: View {
     @State private var totalSeconds = 15 * 60
     @State private var remaining = 15 * 60
     @State private var isRunning = false
+    /// Moment zakończenia sesji — odliczanie liczone od daty, żeby działało
+    /// poprawnie także po zablokowaniu ekranu i powrocie do aplikacji.
+    @State private var endDate: Date?
 
     private let presets = [2, 5, 15, 25]
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -92,8 +95,8 @@ struct FocusTimerView: View {
         .background(AppBackground())
         .buttonStyle(ScaleButtonStyle())
         .onReceive(tick) { _ in
-            guard isRunning else { return }
-            remaining -= 1
+            guard isRunning, let end = endDate else { return }
+            remaining = max(0, Int(end.timeIntervalSinceNow.rounded()))
             if remaining <= 0 { finish() }
         }
         .onChange(of: store.timerRequest) {
@@ -119,34 +122,44 @@ struct FocusTimerView: View {
 
     private func selectPreset(_ minutes: Int) {
         isRunning = false
+        endDate = nil
         totalSeconds = minutes * 60
         remaining = totalSeconds
         UIApplication.shared.isIdleTimerDisabled = false
+        FocusNotifications.cancel()
     }
 
     private func start() {
         if remaining <= 0 { remaining = totalSeconds }
+        endDate = Date().addingTimeInterval(TimeInterval(remaining))
         isRunning = true
         // Ekran nie gaśnie w trakcie sesji skupienia.
         UIApplication.shared.isIdleTimerDisabled = true
+        FocusNotifications.schedule(after: TimeInterval(remaining))
         Haptics.tap()
     }
 
     private func pause() {
         isRunning = false
+        endDate = nil
         UIApplication.shared.isIdleTimerDisabled = false
+        FocusNotifications.cancel()
     }
 
     private func finish() {
         isRunning = false
+        endDate = nil
         remaining = 0
         UIApplication.shared.isIdleTimerDisabled = false
+        FocusNotifications.cancel()
         store.reward(8, big: true)
     }
 
     private func reset() {
         isRunning = false
+        endDate = nil
         remaining = totalSeconds
         UIApplication.shared.isIdleTimerDisabled = false
+        FocusNotifications.cancel()
     }
 }

@@ -58,7 +58,9 @@ struct LifeView: View {
                     .font(.subheadline.bold())
                 Spacer()
                 Button { store.changeWater(-1) } label: { stepperIcon("minus") }
+                    .accessibilityLabel("Odejmij szklankę wody")
                 Button { store.changeWater(1) } label: { stepperIcon("plus") }
+                    .accessibilityLabel("Dodaj szklankę wody")
             }
         }
         .padding(16)
@@ -140,6 +142,7 @@ struct LifeView: View {
                         .background(Color.appAccentDark, in: RoundedRectangle(cornerRadius: 11))
                         .foregroundColor(.white)
                 }
+                .accessibilityLabel("Dodaj do poczekalni zakupowej")
             }
 
             // Odświeżanie co minutę, żeby odliczanie i przyciski decyzji

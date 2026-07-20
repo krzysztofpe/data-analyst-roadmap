@@ -24,6 +24,9 @@ bez przytłaczających list, za to z dopaminą.
   kołem oraz uziemienie 5-4-3-2-1 na stres i przytłoczenie. Dostępny jednym
   tapnięciem z nagłówka w każdym miejscu aplikacji.
 - **✨ Dopamina** — XP, poziomy, konfetti, haptyka i pochwały po każdym zrobionym kroku.
+- **👋 Onboarding** — 4 szybkie karty przy pierwszym uruchomieniu, bez ściany tekstu.
+- **🔔 Powiadomienie timera** — koniec sesji skupienia da znać nawet przy
+  zablokowanym ekranie; odliczanie liczone od daty końcowej, więc działa w tle.
 
 Dane trzymane lokalnie na telefonie (JSON w Documents) — zero kont, zero serwera,
 zero rozpraszaczy. Interfejs w 100% po polsku.
@@ -49,6 +52,11 @@ zero rozpraszaczy. Interfejs w 100% po polsku.
 > wystarczy ponownie wgrać ją z Xcode. Płatne konto deweloperskie (99 USD/rok)
 > zdejmuje ten limit i pozwala na TestFlight/App Store.
 
+## Publikacja w App Store
+
+Krok po kroku (z gotowym opisem, słowami kluczowymi i odpowiedziami do
+formularza prywatności): zobacz **[APPSTORE.md](APPSTORE.md)**.
+
 ## Struktura projektu
 
 ```
@@ -56,8 +64,11 @@ Ogarnito/
 ├── OgarnitoApp.swift        # punkt wejścia
 ├── Models.swift             # model danych, kolory motywu, wspólne UI, haptyka
 ├── AppStore.swift           # stan aplikacji, XP/poziomy, persystencja JSON
+├── Notifications.swift      # lokalne powiadomienie o końcu sesji skupienia
+├── PrivacyInfo.xcprivacy    # manifest prywatności (wymagany przez Apple)
 └── Views/
     ├── RootView.swift       # TabView, nagłówek XP + SOS, konfetti, pochwały
+    ├── OnboardingView.swift # 4 karty przy pierwszym uruchomieniu
     ├── NowView.swift        # „Teraz" — jedno zadanie, jeden krok, odblokowanie
     ├── TasksView.swift      # brain dump + lista zadań z mikro-krokami
     ├── HabitsView.swift     # nawyki, siatka 7 dni, streaki

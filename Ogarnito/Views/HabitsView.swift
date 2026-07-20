@@ -59,6 +59,7 @@ struct HabitsView: View {
 struct HabitCard: View {
     @EnvironmentObject var store: AppStore
     let habit: Habit
+    @State private var confirmDelete = false
 
     private static let weekdaySymbols = ["nd", "pn", "wt", "śr", "cz", "pt", "sb"]
 
@@ -80,13 +81,22 @@ struct HabitCard: View {
                     .font(.subheadline.bold())
                     .foregroundColor(.appWarn)
                 Button {
-                    store.deleteHabit(habit.id)
+                    confirmDelete = true
                 } label: {
                     Image(systemName: "trash")
                         .font(.footnote)
                         .frame(width: 30, height: 30)
                         .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 10))
                         .foregroundColor(.appMuted)
+                }
+                .accessibilityLabel("Usuń nawyk")
+                .confirmationDialog(
+                    "Usunąć nawyk „\(habit.name)” razem z całą historią?",
+                    isPresented: $confirmDelete,
+                    titleVisibility: .visible
+                ) {
+                    Button("Usuń", role: .destructive) { store.deleteHabit(habit.id) }
+                    Button("Anuluj", role: .cancel) {}
                 }
             }
 

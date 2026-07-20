@@ -63,6 +63,7 @@ struct TasksView: View {
                         .background(Color.appAccentDark, in: RoundedRectangle(cornerRadius: 14))
                         .foregroundColor(.white)
                 }
+                .accessibilityLabel("Dodaj zadanie")
             }
             Text("🧠 Brain dump: nie planuj, nie oceniaj — po prostu wypisz wszystko z głowy. Ogarniesz to potem.")
                 .font(.caption)
@@ -129,6 +130,7 @@ struct TaskCard: View {
                         .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 10))
                         .foregroundColor(.appMuted)
                 }
+                .accessibilityLabel("Opcje zadania")
             }
 
             if isExpanded || !task.steps.isEmpty {
@@ -159,6 +161,7 @@ struct TaskCard: View {
                                     .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 10))
                                     .foregroundColor(.appAccent)
                             }
+                            .accessibilityLabel("Dodaj krok")
                         }
                     }
                 }
@@ -197,6 +200,7 @@ struct CheckCircle: View {
             .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(done ? "Zrobione — odznacz" : "Oznacz jako zrobione")
     }
 }
 

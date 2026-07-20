@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var store: AppStore
+    @AppStorage("onboardingSeen") private var onboardingSeen = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,6 +25,14 @@ struct RootView: View {
                     .tag(AppStore.Tab.life)
             }
             .tint(.appAccent)
+            // Onboarding na osobnym widoku niż cover oddechu — dwa fullScreenCover
+            // na tym samym widoku nie działają razem.
+            .fullScreenCover(isPresented: Binding(
+                get: { !onboardingSeen },
+                set: { presented in if !presented { onboardingSeen = true } }
+            )) {
+                OnboardingView()
+            }
         }
         .background(Color.appBg)
         .overlay(alignment: .top) { PraiseBanner() }
@@ -53,6 +62,7 @@ struct XPHeader: View {
                     .overlay(Circle().stroke(Color.appLine))
             }
             .buttonStyle(ScaleButtonStyle())
+            .accessibilityLabel("Oddech ratunkowy")
             VStack(alignment: .trailing, spacing: 4) {
                 Text("Poziom \(store.level) · \(store.xp) XP")
                     .font(.caption)
