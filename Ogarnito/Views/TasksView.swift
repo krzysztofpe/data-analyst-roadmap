@@ -100,6 +100,9 @@ struct TaskCard: View {
                         if task.isFrog {
                             Badge(text: "🐸 żaba", color: .appFrog)
                         }
+                        if let energy = task.energy {
+                            Badge(text: energy.badge, color: .appWarn)
+                        }
                         if !task.steps.isEmpty {
                             Badge(text: "\(task.doneStepsCount)/\(task.steps.count) kroków",
                                   color: .appMuted)
@@ -118,6 +121,13 @@ struct TaskCard: View {
                     }
                     Button(action: onToggleExpand) {
                         Label("Rozbij na kroki 🔪", systemImage: "scissors")
+                    }
+                    Menu {
+                        Button("⚡ Na pełną baterię") { store.setEnergy(task.id, .high) }
+                        Button("🪫 Na niską baterię") { store.setEnergy(task.id, .low) }
+                        Button("Bez oznaczenia") { store.setEnergy(task.id, nil) }
+                    } label: {
+                        Label("Poziom energii", systemImage: "bolt")
                     }
                     Button(role: .destructive) {
                         store.deleteTask(task.id)

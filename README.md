@@ -28,6 +28,13 @@ bez przytłaczających list, za to z dopaminą.
   po trzecim zadaniu fanfary, reszta dnia to czysty bonus.
 - **↷ Pomiń** — obecne zadanie blokuje? Odłóż je na później bez poczucia winy
   i zobacz następne (wraca przy kolejnym uruchomieniu).
+- **⚡🪫 Poziomy energii** — oznacz zadania „na pełną baterię" albo „na zombie
+  mode", a potem jednym tapnięciem filtruj widok „Teraz" pod obecny stan mocy.
+- **🎲 Wylosuj** — paraliż decyzyjny? Kostka wybiera zadanie za Ciebie.
+- **🔔 Dzienne przypomnienia** — plan dnia rano, jedzenie w południe, domknięcie
+  wieczorem; własne godziny, włączane w ustawieniach.
+- **💾 Kopia zapasowa** — eksport i przywracanie wszystkich danych jako JSON
+  (przez arkusz udostępniania / aplikację Pliki).
 - **📈 Twój tydzień** — miniwykres ukończonych zadań z ostatnich 7 dni.
 - **⚙️ Ustawienia** — statystyki postępów, powtórka wprowadzenia, wymazanie
   danych (z podwójnym potwierdzeniem).
@@ -72,6 +79,7 @@ Ogarnito/
 ├── Models.swift             # model danych, kolory motywu, wspólne UI, haptyka
 ├── AppStore.swift           # stan aplikacji, XP/poziomy, persystencja JSON
 ├── Notifications.swift      # lokalne powiadomienie o końcu sesji skupienia
+├── Reminders.swift          # codzienne przypomnienia (plan / jedzenie / wieczór)
 ├── PrivacyInfo.xcprivacy    # manifest prywatności (wymagany przez Apple)
 └── Views/
     ├── RootView.swift       # TabView, nagłówek XP + SOS + ustawienia, konfetti

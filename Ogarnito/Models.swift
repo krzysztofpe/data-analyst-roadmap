@@ -9,6 +9,13 @@ struct TaskStep: Identifiable, Codable, Hashable {
     var done = false
 }
 
+/// Ile mocy wymaga zadanie — żeby dało się dopasować robotę do stanu baterii.
+enum EnergyLevel: String, Codable, Hashable {
+    case high, low
+
+    var badge: String { self == .high ? "⚡" : "🪫" }
+}
+
 struct TodoTask: Identifiable, Codable, Hashable {
     var id = UUID()
     var title: String
@@ -17,6 +24,7 @@ struct TodoTask: Identifiable, Codable, Hashable {
     var isFrog = false
     var doneAt: Date?
     var createdAt = Date()
+    var energy: EnergyLevel?
 
     var nextStep: TaskStep? { steps.first { !$0.done } }
     var doneStepsCount: Int { steps.filter(\.done).count }

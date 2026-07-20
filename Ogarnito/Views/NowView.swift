@@ -24,14 +24,45 @@ struct NowView: View {
     }
 
     private var greetingHeader: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(greeting)
-                .font(.title3.bold())
-            Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
-                .font(.caption)
-                .foregroundColor(.appMuted)
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(greeting)
+                    .font(.title3.bold())
+                Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
+            Spacer()
+            if store.openTaskCount > 0 {
+                energyPicker
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Filtr mocy: pokaż zadania pasujące do obecnego stanu baterii.
+    private var energyPicker: some View {
+        HStack(spacing: 6) {
+            energyChip(.high)
+            energyChip(.low)
+        }
+    }
+
+    private func energyChip(_ level: EnergyLevel) -> some View {
+        let selected = store.currentEnergy == level
+        return Button {
+            withAnimation(.spring(duration: 0.3)) {
+                store.currentEnergy = selected ? nil : level
+            }
+        } label: {
+            Text(level.badge)
+                .font(.subheadline)
+                .frame(width: 38, height: 38)
+                .background(selected ? Color.appAccentDark : Color.appCard2, in: Circle())
+                .overlay(Circle().stroke(selected ? Color.appAccent : Color.appLine))
+        }
+        .accessibilityLabel(level == .high
+            ? (selected ? "Wyłącz filtr pełnej energii" : "Pokaż zadania na pełną energię")
+            : (selected ? "Wyłącz filtr niskiej energii" : "Pokaż zadania na niską energię"))
     }
 
     private var greeting: String {
@@ -96,14 +127,27 @@ struct NowView: View {
                 }
                 .font(.subheadline.bold())
 
-                Button {
-                    showStuck = true
-                } label: {
-                    Text("😩 Nie mogę zacząć")
-                        .font(.footnote.bold())
-                        .foregroundColor(.appMuted)
-                        .padding(.top, 2)
+                HStack(spacing: 18) {
+                    Button {
+                        showStuck = true
+                    } label: {
+                        Text("😩 Nie mogę zacząć")
+                            .font(.footnote.bold())
+                            .foregroundColor(.appMuted)
+                    }
+                    if store.openTaskCount > 1 {
+                        Button {
+                            withAnimation(.spring(duration: 0.35)) {
+                                store.pickRandomTask()
+                            }
+                        } label: {
+                            Text("🎲 Wylosuj")
+                                .font(.footnote.bold())
+                                .foregroundColor(.appMuted)
+                        }
+                    }
                 }
+                .padding(.top, 2)
                 .confirmationDialog(
                     "Utknięcie to nie lenistwo — mózg potrzebuje rozbiegu. Wybierz odblokowanie:",
                     isPresented: $showStuck,

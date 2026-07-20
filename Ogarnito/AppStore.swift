@@ -16,6 +16,10 @@ final class AppStore: ObservableObject {
     @Published var timerRequest: Int?
     /// Zadania odłożone „nie teraz" — tylko na czas tej sesji, świeże oczy po restarcie.
     @Published var skippedIDs: Set<UUID> = []
+    /// Filtr „ile mam teraz mocy" — sesyjny, wpływa na wybór zadania w „Teraz".
+    @Published var currentEnergy: EnergyLevel?
+    /// Zadanie wskazane kostką 🎲 — ma pierwszeństwo, dopóki nie zostanie zrobione/pominięte.
+    @Published var forcedTaskID: UUID?
 
     enum Tab: Hashable { case now, tasks, habits, timer, life }
 
@@ -41,22 +45,27 @@ final class AppStore: ObservableObject {
         return Double(xp - base) / Double(next - base)
     }
 
-    func reward(_ points: Int, big: Bool) {
-        let levelBefore = level
-        xp += points
-        praise = "\(Self.praises.randomElement()!)  +\(points) XP"
-        if big { confettiBurst += 1 }
-        if level > levelBefore {
-            praise = "🏆 POZIOM \(level)! Rośniesz w siłę!"
-            confettiBurst += 1
-        }
-        Haptics.success()
+    func showPraise(_ text: String) {
+        praise = text
         praiseClearTask?.cancel()
         praiseClearTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 2_500_000_000)
             guard !Task.isCancelled else { return }
             self?.praise = nil
         }
+    }
+
+    func reward(_ points: Int, big: Bool) {
+        let levelBefore = level
+        xp += points
+        if big { confettiBurst += 1 }
+        if level > levelBefore {
+            confettiBurst += 1
+            showPraise("🏆 POZIOM \(level)! Rośniesz w siłę!")
+        } else {
+            showPraise("\(Self.praises.randomElement()!)  +\(points) XP")
+        }
+        Haptics.success()
         save()
     }
 
@@ -76,12 +85,22 @@ final class AppStore: ObservableObject {
         }
     }
 
-    /// Jedno zadanie do pokazania w widoku „Teraz": najpierw żaba, potem najnowsze otwarte.
+    /// Jedno zadanie do pokazania w widoku „Teraz": kostka > żaba > dopasowane
+    /// do energii > najnowsze otwarte.
     var currentTask: TodoTask? {
         let open = sortedTasks.filter { !$0.done }
-        return open.first { $0.isFrog && !skippedIDs.contains($0.id) }
-            ?? open.first { !skippedIDs.contains($0.id) }
-            ?? open.first
+        if let forced = forcedTaskID, let task = open.first(where: { $0.id == forced }) {
+            return task
+        }
+        let fresh = open.filter { !skippedIDs.contains($0.id) }
+        let pool: [TodoTask]
+        if let level = currentEnergy {
+            let matching = fresh.filter { $0.energy == nil || $0.energy == level }
+            pool = matching.isEmpty ? fresh : matching
+        } else {
+            pool = fresh
+        }
+        return pool.first { $0.isFrog } ?? pool.first ?? open.first
     }
 
     var openTaskCount: Int { tasks.filter { !$0.done }.count }
@@ -89,6 +108,7 @@ final class AppStore: ObservableObject {
     /// „Nie teraz" — pokaż następne otwarte zadanie zamiast obecnego.
     func skipCurrentTask() {
         guard let current = currentTask else { return }
+        if forcedTaskID == current.id { forcedTaskID = nil }
         skippedIDs.insert(current.id)
         let open = tasks.filter { !$0.done }
         if open.allSatisfy({ skippedIDs.contains($0.id) }) {
@@ -96,6 +116,22 @@ final class AppStore: ObservableObject {
             skippedIDs = [current.id]
         }
         Haptics.tap()
+    }
+
+    /// Paraliż decyzyjny? Kostka wybiera za Ciebie.
+    func pickRandomTask() {
+        let open = tasks.filter { !$0.done }
+        let candidates = open.filter { $0.id != currentTask?.id }
+        guard let pick = (candidates.isEmpty ? open : candidates).randomElement() else { return }
+        forcedTaskID = pick.id
+        showPraise("🎲 Los wybrał. Nie dyskutuj z kostką!")
+        Haptics.tap()
+    }
+
+    func setEnergy(_ id: TodoTask.ID, _ level: EnergyLevel?) {
+        guard let i = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[i].energy = level
+        save()
     }
 
     var doneToday: [TodoTask] {
@@ -129,9 +165,10 @@ final class AppStore: ObservableObject {
         tasks[i].doneAt = Date()
         for j in tasks[i].steps.indices { tasks[i].steps[j].done = true }
         skippedIDs.remove(tasks[i].id)
+        if forcedTaskID == tasks[i].id { forcedTaskID = nil }
         reward(10, big: true)
         if doneToday.count == 3 {
-            praise = "🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus."
+            showPraise("🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus.")
             confettiBurst += 1
         }
     }
@@ -165,6 +202,7 @@ final class AppStore: ObservableObject {
 
     func deleteTask(_ id: TodoTask.ID) {
         tasks.removeAll { $0.id == id }
+        if forcedTaskID == id { forcedTaskID = nil }
         save()
     }
 
@@ -255,7 +293,47 @@ final class AppStore: ObservableObject {
         care = [:]
         xp = 0
         skippedIDs = []
+        forcedTaskID = nil
+        currentEnergy = nil
         save()
+    }
+
+    // MARK: - Kopia zapasowa
+
+    /// Zapisuje pełną kopię danych do pliku tymczasowego (do udostępnienia).
+    func writeBackupFile() -> URL? {
+        let snapshot = Snapshot(tasks: tasks, habits: habits, xp: xp,
+                                impulses: impulses, care: care)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(snapshot) else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ogarnito-backup.json")
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    /// Wczytuje kopię zapasową, zastępując obecne dane. Zwraca false przy złym pliku.
+    @discardableResult
+    func importBackup(_ data: Data) -> Bool {
+        guard let snapshot = try? JSONDecoder().decode(Snapshot.self, from: data) else {
+            return false
+        }
+        tasks = snapshot.tasks
+        habits = snapshot.habits
+        xp = snapshot.xp
+        impulses = snapshot.impulses ?? []
+        care = snapshot.care ?? [:]
+        skippedIDs = []
+        forcedTaskID = nil
+        save()
+        showPraise("📥 Dane przywrócone z kopii!")
+        Haptics.success()
+        return true
     }
 
     // MARK: - Jedzenie i woda
