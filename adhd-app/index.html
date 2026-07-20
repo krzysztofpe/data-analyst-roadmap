@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Ogarnito — planer dla ADHD</title>
+<meta name="description" content="Planer zadań i nawyków dla osób z ADHD. Jedno zadanie naraz, mikro-kroki, dopamina.">
+<meta name="theme-color" content="#0f0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ogarnito">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#0f0f1a; --card:#1a1a2b; --card2:#232338; --line:#2e2e48;
+  --text:#f2f2fa; --muted:#9a9ab5; --accent:#a78bfa; --accent2:#7c3aed;
+  --good:#34d399; --warn:#fbbf24; --bad:#f87171; --frog:#4ade80;
+  --radius:18px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  overscroll-behavior:none;}
+body{padding-top:env(safe-area-inset-top);}
+button{font-family:inherit; border:none; cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+header{position:sticky; top:0; z-index:20; background:rgba(15,15,26,.92);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  padding:12px 16px 10px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--line);}
+header h1{font-size:20px; margin:0; letter-spacing:.3px;}
+header h1 span{color:var(--accent);}
+.xpbox{text-align:right; font-size:12px; color:var(--muted);}
+.xpbar{width:110px; height:6px; background:var(--card2); border-radius:3px; margin-top:4px; overflow:hidden;}
+.xpbar i{display:block; height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent)); border-radius:3px; transition:width .4s;}
+
+main{padding:14px 16px 110px; max-width:560px; margin:0 auto;}
+.view{display:none; animation:fade .18s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+/* ---------- bottom nav ---------- */
+nav{position:fixed; bottom:0; left:0; right:0; z-index:30;
+  display:flex; background:rgba(20,20,34,.95); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom));}
+nav button{flex:1; background:none; color:var(--muted); font-size:11px; padding:7px 0 5px;
+  display:flex; flex-direction:column; align-items:center; gap:2px; border-radius:12px;}
+nav button .ico{font-size:22px; line-height:1;}
+nav button.active{color:var(--accent);}
+nav button.active .ico{transform:scale(1.12);}
+
+/* ---------- cards & buttons ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px; margin-bottom:12px;}
+.btn{background:var(--accent2); color:#fff; border-radius:14px; padding:14px 18px;
+  font-size:16px; font-weight:600; width:100%; transition:transform .08s;}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:var(--card2); color:var(--text);}
+.btn.small{width:auto; padding:9px 14px; font-size:14px; border-radius:12px;}
+.btn.good{background:var(--good); color:#06281c;}
+.row{display:flex; gap:10px;}
+.row .btn{flex:1;}
+h2{font-size:15px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin:20px 0 10px; font-weight:600;}
+.empty{color:var(--muted); text-align:center; padding:26px 12px; font-size:15px; line-height:1.5;}
+.empty .big{font-size:38px; display:block; margin-bottom:8px;}
+
+/* ---------- brain dump ---------- */
+.dump{display:flex; gap:8px; margin-bottom:6px;}
+.dump input{flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px; font-size:16px; color:var(--text); outline:none;}
+.dump input:focus{border-color:var(--accent);}
+.dump button{background:var(--accent2); color:#fff; border-radius:14px; width:52px; font-size:22px;}
+.hint{font-size:12px; color:var(--muted); margin:0 4px 14px; line-height:1.4;}
+
+/* ---------- task list ---------- */
+.task{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:13px 14px; margin-bottom:10px;}
+.task.frog{border-color:var(--frog);}
+.task-head{display:flex; align-items:center; gap:11px;}
+.check{width:28px; height:28px; min-width:28px; border-radius:50%; border:2px solid var(--muted);
+  background:none; font-size:15px; color:transparent; transition:all .15s;}
+.task.done .check{background:var(--good); border-color:var(--good); color:#06281c;}
+.task-title{flex:1; font-size:16px; line-height:1.35;}
+.task.done .task-title{text-decoration:line-through; color:var(--muted);}
+.task-actions{display:flex; gap:6px;}
+.iconbtn{background:var(--card2); color:var(--muted); border-radius:10px; width:34px; height:34px; font-size:15px;}
+.steps{margin:10px 0 2px 39px;}
+.step{display:flex; align-items:center; gap:9px; padding:5px 0; font-size:14.5px;}
+.step .check{width:21px; height:21px; min-width:21px; font-size:11px;}
+.step.done .check{background:var(--good); border-color:var(--good); color:#06281c;}
+.step.done span{text-decoration:line-through; color:var(--muted);}
+.addstep{display:flex; gap:8px; margin:8px 0 2px 39px;}
+.addstep input{flex:1; background:var(--card2); border:1px solid var(--line); border-radius:10px;
+  padding:8px 10px; font-size:14px; color:var(--text); outline:none;}
+.addstep button{background:var(--card2); color:var(--accent); border-radius:10px; width:38px; font-size:18px;}
+.badge{font-size:11px; background:var(--card2); color:var(--muted); border-radius:8px; padding:3px 7px;}
+
+/* ---------- NOW view ---------- */
+.now-card{background:linear-gradient(150deg,#241b3f,#1a1a2b); border:1px solid #3b2d63;
+  border-radius:22px; padding:26px 20px; text-align:center;}
+.now-label{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:10px;}
+.now-title{font-size:24px; font-weight:700; line-height:1.3; margin-bottom:8px;}
+.now-step{font-size:16px; color:var(--muted); margin-bottom:22px; line-height:1.45;}
+.now-step b{color:var(--text);}
+.praise{text-align:center; color:var(--good); font-size:15px; min-height:22px; margin:10px 0; font-weight:600;}
+
+/* ---------- habits ---------- */
+.habit{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px;}
+.habit-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.habit-name{flex:1; font-size:16px; font-weight:600;}
+.streak{font-size:14px; color:var(--warn); font-weight:700;}
+.days{display:flex; gap:6px;}
+.day{flex:1; text-align:center;}
+.day small{display:block; font-size:10px; color:var(--muted); margin-bottom:4px; text-transform:uppercase;}
+.dot{width:100%; aspect-ratio:1; border-radius:10px; background:var(--card2); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:15px;}
+.dot.hit{background:var(--good); border-color:var(--good);}
+.day.today .dot{border-color:var(--accent);}
+.day button.dot{cursor:pointer;}
+
+/* ---------- timer ---------- */
+.timer-wrap{text-align:center; padding:10px 0;}
+.dial{position:relative; width:240px; height:240px; margin:6px auto 14px;}
+.dial svg{transform:rotate(-90deg);}
+.dial .time{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+.dial .time b{font-size:46px; font-variant-numeric:tabular-nums; letter-spacing:1px;}
+.dial .time span{font-size:13px; color:var(--muted); margin-top:2px;}
+.presets{display:flex; gap:8px; justify-content:center; margin-bottom:14px;}
+.presets button{background:var(--card2); color:var(--text); border-radius:12px; padding:10px 16px; font-size:15px; border:1px solid var(--line);}
+.presets button.sel{background:var(--accent2); border-color:var(--accent2);}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; display:none;
+  align-items:flex-end; justify-content:center;}
+.overlay.show{display:flex;}
+.sheet{background:var(--card); border-radius:22px 22px 0 0; width:100%; max-width:560px;
+  padding:20px 18px calc(24px + env(safe-area-inset-bottom));}
+.sheet h3{margin:0 0 14px; font-size:18px;}
+.sheet input{width:100%; background:var(--card2); border:1px solid var(--line); border-radius:12px;
+  padding:13px; font-size:16px; color:var(--text); outline:none; margin-bottom:10px;}
+
+/* ---------- confetti ---------- */
+.confetti{position:fixed; font-size:22px; z-index:99; pointer-events:none; animation:fall 1.1s ease-in forwards;}
+@keyframes fall{0%{transform:translateY(0) rotate(0); opacity:1;} 100%{transform:translateY(45vh) rotate(240deg); opacity:0;}}
+
+.toast{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(90px + env(safe-area-inset-bottom));
+  background:var(--card2); border:1px solid var(--line); color:var(--text); padding:10px 18px;
+  border-radius:14px; font-size:14px; z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; max-width:88%; text-align:center;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Ogarni<span>to</span></h1>
+  <div class="xpbox">
+    <div id="lvl">Poziom 1 · 0 XP</div>
+    <div class="xpbar"><i id="xpfill" style="width:0%"></i></div>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= TERAZ ================= -->
+<section class="view active" id="view-now">
+  <div id="now-content"></div>
+  <div class="praise" id="praise"></div>
+  <h2>Dzisiaj ogarnięte</h2>
+  <div id="done-today" class="empty">Jeszcze nic — i to jest OK. Zacznij od jednej małej rzeczy. 💜</div>
+</section>
+
+<!-- ================= ZADANIA ================= -->
+<section class="view" id="view-tasks">
+  <div class="dump">
+    <input id="dump-input" type="text" placeholder="Wrzuć, co masz w głowie…" enterkeyhint="done" autocomplete="off">
+    <button id="dump-add" aria-label="Dodaj">+</button>
+  </div>
+  <p class="hint">🧠 Brain dump: nie planuj, nie oceniaj — po prostu wypisz wszystko z głowy. Ogarniesz to potem.</p>
+  <div id="task-list"></div>
+</section>
+
+<!-- ================= NAWYKI ================= -->
+<section class="view" id="view-habits">
+  <div id="habit-list"></div>
+  <button class="btn ghost" id="habit-add">+ Nowy nawyk</button>
+  <p class="hint" style="margin-top:12px">🔥 Nie przerywaj łańcucha! A jak przerwiesz — trudno, wracasz następnego dnia. Jeden pominięty dzień to nie porażka.</p>
+</section>
+
+<!-- ================= TIMER ================= -->
+<section class="view" id="view-timer">
+  <div class="timer-wrap">
+    <p class="hint" style="margin-bottom:16px">⏱️ Umowa z mózgiem: pracujesz TYLKO tyle. Potem możesz przestać. (Spoiler: często nie chcesz.)</p>
+    <div class="presets" id="presets">
+      <button data-min="5">5 min</button>
+      <button data-min="15" class="sel">15 min</button>
+      <button data-min="25">25 min</button>
+    </div>
+    <div class="dial">
+      <svg width="240" height="240" viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="106" fill="none" stroke="#232338" stroke-width="14"/>
+        <circle id="ring" cx="120" cy="120" r="106" fill="none" stroke="#a78bfa" stroke-width="14"
+          stroke-linecap="round" stroke-dasharray="666" stroke-dashoffset="0"/>
+      </svg>
+      <div class="time"><b id="clock">15:00</b><span id="timer-state">gotowy</span></div>
+    </div>
+    <div class="row" style="max-width:300px;margin:0 auto">
+      <button class="btn" id="timer-start">Start</button>
+      <button class="btn ghost" id="timer-reset">Reset</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav>
+  <button data-view="now" class="active"><span class="ico">🎯</span>Teraz</button>
+  <button data-view="tasks"><span class="ico">📝</span>Zadania</button>
+  <button data-view="habits"><span class="ico">🔥</span>Nawyki</button>
+  <button data-view="timer"><span class="ico">⏱️</span>Timer</button>
+</nav>
+
+<div class="overlay" id="habit-overlay">
+  <div class="sheet">
+    <h3>Nowy nawyk</h3>
+    <input id="habit-name" type="text" placeholder="np. Szklanka wody rano" autocomplete="off">
+    <div class="row">
+      <button class="btn ghost" id="habit-cancel">Anuluj</button>
+      <button class="btn" id="habit-save">Dodaj</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================== state ============================== */
+const LS_KEY = "ogarnito-v1";
+const state = load();
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(LS_KEY)); if(s && s.tasks) return s; }catch(e){}
+  return { tasks:[], habits:[], xp:0 };
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+const uid = ()=> Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const todayKey = ()=> new Date().toISOString().slice(0,10);
+const $ = s => document.querySelector(s);
+
+/* ============================== XP / dopamina ============================== */
+const PRAISE = ["Sztos! 🎉","No i git! 💪","Mózg dostał dopaminkę 🧠✨","Zrobione = lepsze niż idealne ✅",
+  "Kolejny krok bliżej! 🚀","Jesteś maszyną 🔥","Tak się to robi! 👏","Boom! 💥","ADHD 0 : 1 Ty 😎"];
+function levelInfo(){
+  const lvl = Math.floor(Math.sqrt(state.xp/60)) + 1;
+  const base = 60*(lvl-1)**2, next = 60*lvl**2;
+  return {lvl, pct: Math.min(100, (state.xp-base)/(next-base)*100)};
+}
+function renderXP(){
+  const {lvl,pct} = levelInfo();
+  $("#lvl").textContent = `Poziom ${lvl} · ${state.xp} XP`;
+  $("#xpfill").style.width = pct + "%";
+}
+function reward(points, big){
+  const before = levelInfo().lvl;
+  state.xp += points; save(); renderXP();
+  const msg = PRAISE[Math.floor(Math.random()*PRAISE.length)] + ` +${points} XP`;
+  $("#praise").textContent = msg;
+  toast(msg);
+  confetti(big ? 26 : 10);
+  if(levelInfo().lvl > before){ toast(`🏆 POZIOM ${levelInfo().lvl}! Rośniesz w siłę!`); confetti(40); }
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+function confetti(n){
+  const EMO = ["🎉","✨","⭐","💜","🎊","💥"];
+  for(let i=0;i<n;i++){
+    const e = document.createElement("div");
+    e.className = "confetti";
+    e.textContent = EMO[Math.floor(Math.random()*EMO.length)];
+    e.style.left = Math.random()*100 + "vw";
+    e.style.top = (10+Math.random()*20) + "vh";
+    e.style.animationDelay = Math.random()*0.3 + "s";
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(), 1600);
+  }
+}
+let toastTimer;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ============================== nawigacja ============================== */
+document.querySelectorAll("nav button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    $("#view-" + b.dataset.view).classList.add("active");
+    renderAll();
+  });
+});
+
+/* ============================== zadania ============================== */
+function addTask(title){
+  title = title.trim();
+  if(!title) return;
+  state.tasks.unshift({id:uid(), title, steps:[], done:false, frog:false, doneAt:null});
+  save(); renderAll();
+}
+$("#dump-add").addEventListener("click", ()=>{ addTask($("#dump-input").value); $("#dump-input").value=""; $("#dump-input").focus(); });
+$("#dump-input").addEventListener("keydown", e=>{ if(e.key==="Enter"){ addTask(e.target.value); e.target.value=""; } });
+
+function toggleTask(id){
+  const t = state.tasks.find(t=>t.id===id); if(!t) return;
+  t.done = !t.done;
+  t.doneAt = t.done ? todayKey() : null;
+  if(t.done){ t.steps.forEach(s=>s.done=true); reward(10, true); } else save();
+  save(); renderAll();
+}
+function toggleStep(tid, sid){
+  const t = state.tasks.find(t=>t.id===tid); if(!t) return;
+  const s = t.steps.find(s=>s.id===sid); if(!s) return;
+  s.done = !s.done;
+  if(s.done) reward(3, false);
+  if(t.steps.length && t.steps.every(s=>s.done) && !t.done){ t.done = true; t.doneAt = todayKey(); reward(10, true); }
+  save(); renderAll();
+}
+function addStep(tid, text){
+  text = text.trim(); if(!text) return;
+  const t = state.tasks.find(t=>t.id===tid); if(!t) return;
+  t.steps.push({id:uid(), text, done:false});
+  if(t.done){ t.done=false; t.doneAt=null; }
+  save(); renderAll();
+}
+function delTask(id){
+  state.tasks = state.tasks.filter(t=>t.id!==id);
+  save(); renderAll();
+}
+function setFrog(id){
+  state.tasks.forEach(t=> t.frog = (t.id===id ? !t.frog : false));
+  save(); renderAll();
+  const t = state.tasks.find(t=>t.id===id);
+  if(t && t.frog) toast("🐸 Żaba wybrana — zjedz ją najpierw!");
+}
+let openSteps = new Set();
+
+function renderTasks(){
+  const list = $("#task-list");
+  const tasks = [...state.tasks].sort((a,b)=> (a.done?1:0)-(b.done?1:0) || (b.frog?1:0)-(a.frog?1:0));
+  if(!tasks.length){
+    list.innerHTML = `<div class="empty"><span class="big">🧘</span>Pusto! Wrzuć wyżej wszystko, co chodzi Ci po głowie.</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  tasks.forEach(t=>{
+    const el = document.createElement("div");
+    el.className = "task" + (t.done?" done":"") + (t.frog?" frog":"");
+    const doneSteps = t.steps.filter(s=>s.done).length;
+    el.innerHTML = `
+      <div class="task-head">
+        <button class="check" data-act="toggle">✓</button>
+        <div class="task-title">${esc(t.title)}
+          ${t.frog?'<span class="badge" style="color:var(--frog)">🐸 żaba</span>':""}
+          ${t.steps.length?`<span class="badge">${doneSteps}/${t.steps.length} kroków</span>`:""}
+        </div>
+        <div class="task-actions">
+          <button class="iconbtn" data-act="frog" title="Najważniejsze dziś">🐸</button>
+          <button class="iconbtn" data-act="steps" title="Rozbij na kroki">🔪</button>
+          <button class="iconbtn" data-act="del" title="Usuń">🗑</button>
+        </div>
+      </div>`;
+    if(openSteps.has(t.id) || t.steps.length){
+      const stepsEl = document.createElement("div");
+      stepsEl.className = "steps";
+      t.steps.forEach(s=>{
+        const se = document.createElement("div");
+        se.className = "step" + (s.done?" done":"");
+        se.innerHTML = `<button class="check">✓</button><span>${esc(s.text)}</span>`;
+        se.querySelector("button").addEventListener("click", ()=>toggleStep(t.id, s.id));
+        stepsEl.appendChild(se);
+      });
+      el.appendChild(stepsEl);
+      if(openSteps.has(t.id)){
+        const add = document.createElement("div");
+        add.className = "addstep";
+        add.innerHTML = `<input type="text" placeholder="Mały krok (max 10 min)…" enterkeyhint="done"><button>+</button>`;
+        const inp = add.querySelector("input");
+        const commit = ()=>{ addStep(t.id, inp.value); openSteps.add(t.id); };
+        add.querySelector("button").addEventListener("click", commit);
+        inp.addEventListener("keydown", e=>{ if(e.key==="Enter") commit(); });
+        el.appendChild(add);
+        setTimeout(()=>inp.focus(), 50);
+      }
+    }
+    el.querySelector('[data-act="toggle"]').addEventListener("click", ()=>toggleTask(t.id));
+    el.querySelector('[data-act="frog"]').addEventListener("click", ()=>setFrog(t.id));
+    el.querySelector('[data-act="steps"]').addEventListener("click", ()=>{
+      openSteps.has(t.id) ? openSteps.delete(t.id) : openSteps.add(t.id);
+      renderAll();
+    });
+    el.querySelector('[data-act="del"]').addEventListener("click", ()=>delTask(t.id));
+    list.appendChild(el);
+  });
+}
+
+/* ============================== TERAZ ============================== */
+function currentTask(){
+  const open = state.tasks.filter(t=>!t.done);
+  return open.find(t=>t.frog) || open[0] || null;
+}
+function renderNow(){
+  const box = $("#now-content");
+  const t = currentTask();
+  if(!t){
+    box.innerHTML = `<div class="now-card">
+      <div class="now-label">Teraz</div>
+      <div class="now-title">Nic nie wisi 🎉</div>
+      <div class="now-step">Dodaj coś w zakładce <b>Zadania</b> — albo po prostu odpocznij. Odpoczynek to też zadanie.</div>
+      </div>`;
+  } else {
+    const next = t.steps.find(s=>!s.done);
+    box.innerHTML = `<div class="now-card">
+      <div class="now-label">${t.frog ? "🐸 Zjedz żabę" : "🎯 Tylko to jedno"}</div>
+      <div class="now-title">${esc(t.title)}</div>
+      <div class="now-step">${next ? `Następny krok: <b>${esc(next.text)}</b>` : "Za duże? Rozbij na mikro-kroki — pierwszy ma zająć maks 10 minut."}</div>
+      <div class="row">
+        <button class="btn good" id="now-done">${next ? "Krok zrobiony ✓" : "Zrobione ✓"}</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="now-split">🔪 Rozbij</button>
+        <button class="btn ghost" id="now-timer">⏱️ 15 min</button>
+      </div>
+    </div>`;
+    $("#now-done").addEventListener("click", ()=>{ next ? toggleStep(t.id, next.id) : toggleTask(t.id); });
+    $("#now-split").addEventListener("click", ()=>{
+      openSteps.add(t.id);
+      document.querySelector('nav button[data-view="tasks"]').click();
+    });
+    $("#now-timer").addEventListener("click", ()=>{
+      setTimerMinutes(15);
+      document.querySelector('nav button[data-view="timer"]').click();
+      startTimer();
+    });
+  }
+  const doneToday = state.tasks.filter(t=>t.done && t.doneAt===todayKey());
+  const dt = $("#done-today");
+  if(!doneToday.length){
+    dt.className = "empty";
+    dt.innerHTML = "Jeszcze nic — i to jest OK. Zacznij od jednej małej rzeczy. 💜";
+  } else {
+    dt.className = "";
+    dt.innerHTML = doneToday.map(t=>`<div class="task done" style="padding:10px 14px"><div class="task-head"><span style="font-size:18px">✅</span><div class="task-title">${esc(t.title)}</div></div></div>`).join("");
+  }
+}
+
+/* ============================== nawyki ============================== */
+const DOW = ["nd","pn","wt","śr","cz","pt","sb"];
+function lastDays(n){
+  const out = [];
+  for(let i=n-1;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    out.push(d);
+  }
+  return out;
+}
+function streakOf(h){
+  let s = 0;
+  const d = new Date();
+  if(!h.history[todayKey()]) d.setDate(d.getDate()-1); // dziś jeszcze nie zrobione nie łamie streaka
+  while(h.history[d.toISOString().slice(0,10)]){ s++; d.setDate(d.getDate()-1); }
+  return s;
+}
+function renderHabits(){
+  const list = $("#habit-list");
+  if(!state.habits.length){
+    list.innerHTML = `<div class="empty"><span class="big">🌱</span>Zacznij od JEDNEGO nawyku.<br>Małego. Śmiesznie małego.</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  state.habits.forEach(h=>{
+    const el = document.createElement("div");
+    el.className = "habit";
+    const s = streakOf(h);
+    el.innerHTML = `
+      <div class="habit-head">
+        <div class="habit-name">${esc(h.name)}</div>
+        <div class="streak">${s>0 ? "🔥 "+s : "—"}</div>
+        <button class="iconbtn" data-act="del">🗑</button>
+      </div>
+      <div class="days"></div>`;
+    const days = el.querySelector(".days");
+    lastDays(7).forEach(d=>{
+      const key = d.toISOString().slice(0,10);
+      const isToday = key===todayKey();
+      const wrap = document.createElement("div");
+      wrap.className = "day" + (isToday?" today":"");
+      const hit = !!h.history[key];
+      wrap.innerHTML = `<small>${DOW[d.getDay()]}</small>`;
+      const dot = document.createElement(isToday ? "button" : "div");
+      dot.className = "dot" + (hit?" hit":"");
+      dot.textContent = hit ? "✓" : "";
+      if(isToday) dot.addEventListener("click", ()=>{
+        if(h.history[key]) delete h.history[key];
+        else { h.history[key] = true; reward(5, false); }
+        save(); renderAll();
+      });
+      wrap.appendChild(dot);
+      days.appendChild(wrap);
+    });
+    el.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+      state.habits = state.habits.filter(x=>x.id!==h.id);
+      save(); renderAll();
+    });
+    list.appendChild(el);
+  });
+}
+$("#habit-add").addEventListener("click", ()=>{ $("#habit-overlay").classList.add("show"); setTimeout(()=>$("#habit-name").focus(),100); });
+$("#habit-cancel").addEventListener("click", ()=>$("#habit-overlay").classList.remove("show"));
+$("#habit-save").addEventListener("click", ()=>{
+  const name = $("#habit-name").value.trim();
+  if(name){ state.habits.push({id:uid(), name, history:{}}); save(); }
+  $("#habit-name").value = "";
+  $("#habit-overlay").classList.remove("show");
+  renderAll();
+});
+$("#habit-name").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#habit-save").click(); });
+
+/* ============================== timer ============================== */
+const CIRC = 2*Math.PI*106;
+let timerTotal = 15*60, timerLeft = 15*60, timerInt = null, wakeLock = null;
+function setTimerMinutes(min){
+  stopTimer();
+  timerTotal = timerLeft = min*60;
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("sel", +b.dataset.min===min));
+  drawTimer();
+}
+function drawTimer(){
+  const m = Math.floor(timerLeft/60), s = timerLeft%60;
+  $("#clock").textContent = `${m}:${String(s).padStart(2,"0")}`;
+  $("#ring").style.strokeDashoffset = CIRC * (1 - timerLeft/timerTotal);
+}
+function startTimer(){
+  if(timerInt) { stopTimer(); return; }
+  if(timerLeft<=0) timerLeft = timerTotal;
+  $("#timer-state").textContent = "lecimy!";
+  $("#timer-start").textContent = "Pauza";
+  if("wakeLock" in navigator) navigator.wakeLock.request("screen").then(w=>wakeLock=w).catch(()=>{});
+  timerInt = setInterval(()=>{
+    timerLeft--;
+    drawTimer();
+    if(timerLeft<=0){
+      stopTimer();
+      $("#timer-state").textContent = "koniec!";
+      reward(8, true);
+      beep();
+      toast("⏱️ Czas minął! Możesz przestać… albo lecieć dalej 😏");
+    }
+  }, 1000);
+}
+function stopTimer(){
+  clearInterval(timerInt); timerInt = null;
+  $("#timer-state").textContent = "pauza";
+  $("#timer-start").textContent = "Start";
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
+}
+$("#timer-start").addEventListener("click", startTimer);
+$("#timer-reset").addEventListener("click", ()=>{ stopTimer(); timerLeft = timerTotal; drawTimer(); $("#timer-state").textContent = "gotowy"; });
+document.querySelectorAll("#presets button").forEach(b=>{
+  b.addEventListener("click", ()=>setTimerMinutes(+b.dataset.min));
+});
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [0, .2, .4].forEach(t=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; g.gain.value = .12;
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .12);
+    });
+  }catch(e){}
+}
+
+/* ============================== utils / init ============================== */
+function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function renderAll(){ renderXP(); renderTasks(); renderNow(); renderHabits(); }
+renderAll(); drawTimer();
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

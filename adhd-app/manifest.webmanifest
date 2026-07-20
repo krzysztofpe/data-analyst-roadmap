@@ -1,0 +1,16 @@
+{
+  "name": "Ogarnito — planer dla ADHD",
+  "short_name": "Ogarnito",
+  "description": "Planer zadań i nawyków dla osób z ADHD. Jedno zadanie naraz, mikro-kroki, dopamina.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f1a",
+  "theme_color": "#0f0f1a",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
