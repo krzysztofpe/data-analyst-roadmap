@@ -83,6 +83,24 @@ zero rozpraszaczy. Interfejs w 100% po polsku.
 Krok po kroku (z gotowym opisem, słowami kluczowymi i odpowiedziami do
 formularza prywatności): zobacz **[APPSTORE.md](APPSTORE.md)**.
 
+## Testy logiki (bez Xcode)
+
+```bash
+python3 Tests/run-logic-tests.py
+```
+
+Skrypt wyciąga prawdziwy kod ze źródeł (algorytm streaka i typy danych),
+kompiluje go jako samodzielne programy i uruchamia — więc testuje oryginał,
+a nie jego kopię. Sprawdza m.in. liczenie streaka z dniem łaski oraz to, czy
+zapisy ze starszych wersji aplikacji wczytują się bez utraty danych.
+Wymaga tylko kompilatora Swift w `PATH`.
+
+Sam kod widoków można sprawdzić składniowo bez Xcode:
+
+```bash
+swiftc -parse -swift-version 5 $(find Ogarnito -name '*.swift')
+```
+
 ## Struktura projektu
 
 ```

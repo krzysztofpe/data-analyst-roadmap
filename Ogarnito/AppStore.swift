@@ -354,8 +354,12 @@ final class AppStore: ObservableObject {
             let key = Dates.dayKey(day)
             if habit.doneDays.contains(key) {
                 count += 1
-            } else if graceDay == nil && count > 0 {
-                graceDay = key          // jednorazowa łaska w obrębie łańcucha
+            } else if graceDay == nil, count > 0,
+                      let before = cal.date(byAdding: .day, value: -1, to: day),
+                      habit.doneDays.contains(Dates.dayKey(before)) {
+                // Łaska tylko wtedy, gdy realnie łączy dwa zrobione dni —
+                // inaczej ❄️ wyskakiwałoby przy każdym świeżym nawyku.
+                graceDay = key
             } else {
                 break
             }
