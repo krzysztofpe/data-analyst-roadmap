@@ -14,6 +14,8 @@ final class AppStore: ObservableObject {
     @Published var showBreathing = false
     /// Ustawiane z innych widoków, żeby timer sam wystartował z zadaną liczbą minut.
     @Published var timerRequest: Int?
+    /// Zadanie, nad którym trwa sesja skupienia — timer nie wisi w próżni.
+    @Published var focusTaskID: UUID?
     /// Zadania odłożone „nie teraz" — tylko na czas tej sesji, świeże oczy po restarcie.
     @Published var skippedIDs: Set<UUID> = []
     /// Filtr „ile mam teraz mocy" — sesyjny, wpływa na wybór zadania w „Teraz".
@@ -407,6 +409,7 @@ final class AppStore: ObservableObject {
         xp = 0
         skippedIDs = []
         forcedTaskID = nil
+        focusTaskID = nil
         currentEnergy = nil
         save()
     }
@@ -476,6 +479,40 @@ final class AppStore: ObservableObject {
         care[key] = c
         if delta > 0 { Haptics.tap() }
         save()
+    }
+
+    // MARK: - Skupienie
+
+    var focusTask: TodoTask? {
+        guard let id = focusTaskID else { return nil }
+        return tasks.first { $0.id == id }
+    }
+
+    /// Odpala sesję skupienia przypiętą do konkretnego zadania.
+    func startFocus(on taskID: UUID?, minutes: Int) {
+        focusTaskID = taskID
+        timerRequest = minutes
+        selectedTab = .timer
+    }
+
+    /// Domknięta sesja dopisuje minuty do zadania i do dzisiejszego licznika.
+    /// Liczymy tylko sesje doprowadzone do końca — inaczej dane byłyby ściemą.
+    func logFocus(minutes: Int) {
+        guard minutes > 0 else { return }
+        if let id = focusTaskID, let i = tasks.firstIndex(where: { $0.id == id }) {
+            tasks[i].focusMinutes = tasks[i].focusTime + minutes
+        }
+        let key = Dates.dayKey()
+        var c = care[key] ?? DayCare()
+        c.focus = (c.focus ?? 0) + minutes
+        care[key] = c
+        save()
+    }
+
+    var focusToday: Int { todayCare.focus ?? 0 }
+
+    var focusTotal: Int {
+        care.values.reduce(0) { $0 + ($1.focus ?? 0) }
     }
 
     // MARK: - Oddech / stres

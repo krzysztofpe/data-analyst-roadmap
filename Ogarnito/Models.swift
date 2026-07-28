@@ -25,9 +25,13 @@ struct TodoTask: Identifiable, Codable, Hashable {
     var doneAt: Date?
     var createdAt = Date()
     var energy: EnergyLevel?
+    /// Realnie przeskupione minuty. Opcjonalne, bo zapisy ze starszych wersji
+    /// tego pola nie mają — a brak klucza wywaliłby dekodowanie całego pliku.
+    var focusMinutes: Int?
 
     var nextStep: TaskStep? { steps.first { !$0.done } }
     var doneStepsCount: Int { steps.filter(\.done).count }
+    var focusTime: Int { focusMinutes ?? 0 }
 }
 
 struct Habit: Identifiable, Codable, Hashable {
@@ -37,10 +41,23 @@ struct Habit: Identifiable, Codable, Hashable {
     var doneDays: Set<String> = []
 }
 
-/// Dzienny check-in dbania o siebie: posiłki i woda.
+/// Dzienny check-in dbania o siebie: posiłki, woda i minuty skupienia.
 struct DayCare: Codable, Hashable {
     var meals: Set<String> = []
     var water: Int = 0
+    /// Opcjonalne z tego samego powodu co `focusMinutes` w zadaniu.
+    var focus: Int?
+}
+
+// MARK: - Czas
+
+enum TimeText {
+    /// „45 min", „1 h", „2 h 15 min" — krótko i po ludzku.
+    static func minutes(_ total: Int) -> String {
+        if total < 60 { return "\(total) min" }
+        let h = total / 60, m = total % 60
+        return m == 0 ? "\(h) h" : "\(h) h \(m) min"
+    }
 }
 
 /// Impuls zakupowy z 48-godzinną poczekalnią: impuls mija, kasa zostaje.

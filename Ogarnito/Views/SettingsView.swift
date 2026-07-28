@@ -236,6 +236,7 @@ struct SettingsView: View {
             statRow("Poziom", "\(store.level)")
             statRow("Punkty XP", "\(store.xp)")
             statRow("Zadania zrobione", "\(store.tasks.filter(\.done).count)")
+            statRow("Czas w skupieniu", TimeText.minutes(store.focusTotal))
             statRow("Aktywne nawyki", "\(store.habits.count)")
             HStack {
                 Text("Zaoszczędzone na impulsach")

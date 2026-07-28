@@ -121,7 +121,7 @@ struct NowView: View {
 
                 HStack(spacing: 10) {
                     ghostButton("🔪 Rozbij") { store.selectedTab = .tasks }
-                    ghostButton("⏱️ Fokus") { store.selectedTab = .timer }
+                    ghostButton("⏱️ Fokus") { store.startFocus(on: task.id, minutes: 15) }
                     if store.openTaskCount > 1 {
                         ghostButton("↷ Pomiń") {
                             withAnimation(.spring(duration: 0.35)) {
@@ -159,8 +159,7 @@ struct NowView: View {
                     titleVisibility: .visible
                 ) {
                     Button("🤏 2 minuty byle jak — start!") {
-                        store.timerRequest = 2
-                        store.selectedTab = .timer
+                        store.startFocus(on: task.id, minutes: 2)
                     }
                     Button("🔪 Rozbij na śmiesznie mały krok") {
                         store.selectedTab = .tasks

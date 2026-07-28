@@ -163,6 +163,10 @@ struct TaskCard: View {
                             Badge(text: "\(task.doneStepsCount)/\(task.steps.count) kroków",
                                   color: .appMuted)
                         }
+                        if task.focusTime > 0 {
+                            Badge(text: "⏱️ \(TimeText.minutes(task.focusTime))",
+                                  color: .appAccent)
+                        }
                     }
                 }
 
@@ -180,6 +184,13 @@ struct TaskCard: View {
                     } label: {
                         Label(task.isFrog ? "Odbierz żabę" : "Najważniejsze dziś 🐸",
                               systemImage: "star")
+                    }
+                    if !task.done {
+                        Button {
+                            store.startFocus(on: task.id, minutes: 15)
+                        } label: {
+                            Label("Skup się na tym ⏱️", systemImage: "timer")
+                        }
                     }
                     Button(action: onToggleExpand) {
                         Label("Rozbij na kroki 🔪", systemImage: "scissors")

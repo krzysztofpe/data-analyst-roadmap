@@ -22,10 +22,31 @@ struct FocusTimerView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 22) {
-                Text("⏱️ Umowa z mózgiem: pracujesz TYLKO tyle. Potem możesz przestać. (Spoiler: często nie chcesz.)")
-                    .font(.caption)
-                    .foregroundColor(.appMuted)
-                    .multilineTextAlignment(.center)
+                if let task = store.focusTask, !task.done {
+                    VStack(spacing: 4) {
+                        Text("SKUPIASZ SIĘ NA")
+                            .font(.caption2.bold())
+                            .kerning(1.5)
+                            .foregroundColor(.appAccent)
+                        Text(task.title)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                        if task.focusTime > 0 {
+                            Text("dotąd: \(TimeText.minutes(task.focusTime))")
+                                .font(.caption)
+                                .foregroundColor(.appMuted)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(14)
+                    .background(Color.appCard, in: RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appLine))
+                } else {
+                    Text("⏱️ Umowa z mózgiem: pracujesz TYLKO tyle. Potem możesz przestać. (Spoiler: często nie chcesz.)")
+                        .font(.caption)
+                        .foregroundColor(.appMuted)
+                        .multilineTextAlignment(.center)
+                }
 
                 HStack(spacing: 8) {
                     ForEach(presets, id: \.self) { minutes in
@@ -95,6 +116,13 @@ struct FocusTimerView: View {
                     }
                 }
                 .frame(maxWidth: 300)
+
+                if store.focusToday > 0 {
+                    Text("Dziś w skupieniu: \(TimeText.minutes(store.focusToday))")
+                        .font(.footnote.bold())
+                        .foregroundColor(.appGood)
+                        .padding(.top, 4)
+                }
             }
             .padding(16)
         }
@@ -163,6 +191,7 @@ struct FocusTimerView: View {
         remaining = 0
         UIApplication.shared.isIdleTimerDisabled = false
         FocusNotifications.cancel()
+        store.logFocus(minutes: totalSeconds / 60)
         store.reward(8, big: true)
     }
 

@@ -18,8 +18,10 @@ bez przytłaczających list, za to z dopaminą.
   bez wyrzutów i bez sterty zaległości (bo ich tu w ogóle nie ma).
 - **✓ „Zrobiłem coś spoza listy"** — zalicz robotę, której nigdy nie zaplanowałeś.
   Połowa ADHD-dnia to takie rzeczy i normalnie nikt za nie nie klaszcze.
-- **⏱️ Timer skupienia** — 2/5/15/25 minut. Umowa z mózgiem: pracujesz *tylko tyle*,
-  potem możesz przestać. Ekran nie gaśnie w trakcie sesji.
+- **⏱️ Timer skupienia przypięty do zadania** — 2/5/15/25 minut. Umowa z mózgiem:
+  pracujesz *tylko tyle*, potem możesz przestać. Ekran nie gaśnie w trakcie sesji.
+  Timer wie, nad czym siedzisz, a domknięte sesje dopisują minuty do zadania —
+  po tygodniu widzisz **ile te rzeczy naprawdę zajmują**, zamiast zgadywać.
 - **😩 „Nie mogę zacząć"** — odblokowanie prokrastynacji: 2 minuty byle jak,
   śmiesznie mały krok albo najpierw wydech.
 - **🍽️ Jedzenie i woda** — ADHD-mózg zapomina jeść. Odhaczasz posiłki i szklanki

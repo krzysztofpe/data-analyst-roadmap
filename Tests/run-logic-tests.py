@@ -92,11 +92,12 @@ func check(_ name: String, _ cond: Bool, _ extra: String = "") {
 var t = TodoTask(title: "Pranie")
 t.steps = [TaskStep(text: "wrzucic"), TaskStep(text: "wlaczyc", done: true)]
 t.isFrog = true; t.energy = .low; t.done = true; t.doneAt = Date()
+t.focusMinutes = 45
 let h = Habit(name: "Woda", doneDays: ["2026-07-01", "2026-07-02"])
 var imp = ImpulseItem(name: "Sluchawki", price: 499.99)
 imp.decision = .skipped; imp.decidedAt = Date()
 let snap = Snapshot(tasks: [t], habits: [h], xp: 245, impulses: [imp],
-                    care: ["2026-07-28": DayCare(meals: ["obiad"], water: 5)])
+                    care: ["2026-07-28": DayCare(meals: ["obiad"], water: 5, focus: 90)])
 
 let data = try! JSONEncoder().encode(snap)
 let back = try! JSONDecoder().decode(Snapshot.self, from: data)
@@ -109,6 +110,10 @@ check("XP zachowane", back.xp == 245)
 check("decyzja o impulsie zachowana",
       back.impulses?.first?.decision == .skipped && back.impulses?.first?.price == 499.99)
 check("jedzenie i woda zachowane", back.care?["2026-07-28"]?.water == 5)
+check("czas skupienia zachowany",
+      back.tasks.first?.focusMinutes == 45 && back.care?["2026-07-28"]?.focus == 90)
+check("formatowanie czasu", TimeText.minutes(45) == "45 min"
+      && TimeText.minutes(60) == "1 h" && TimeText.minutes(135) == "2 h 15 min")
 
 // Zapis z wczesniejszej wersji apki: bez impulses, care i energy.
 let legacy = """
@@ -122,6 +127,8 @@ if let old = try? JSONDecoder().decode(Snapshot.self, from: Data(legacy.utf8)) {
           old.tasks.count == 1 && old.habits.count == 1 && old.xp == 120)
     check("brakujace pola dostaja wartosci domyslne",
           old.impulses == nil && old.care == nil && old.tasks[0].energy == nil)
+    check("brak czasu skupienia w starym zapisie nie psuje odczytu",
+          old.tasks[0].focusMinutes == nil && old.tasks[0].focusTime == 0)
 } else {
     check("stary zapis wczytuje sie bez utraty danych", false, "-> UTRATA DANYCH")
 }
@@ -149,6 +156,7 @@ def build_persistence_program() -> str:
         "struct Habit: Identifiable, Codable, Hashable {",
         "struct DayCare: Codable, Hashable {",
         "struct ImpulseItem: Identifiable, Codable, Hashable {",
+        "enum TimeText {",
     ]
     parts = [block(models, h) for h in types]
     snapshot = block(store, "private struct Snapshot: Codable {").replace(
