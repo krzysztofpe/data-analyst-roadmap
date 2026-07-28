@@ -151,10 +151,56 @@ struct SectionTitle: View {
 // MARK: - Haptyka
 
 enum Haptics {
+    /// Wibracje da się wyłączyć — dla części osób są rozpraszaczem, nie nagrodą.
+    static var enabled: Bool {
+        UserDefaults.standard.object(forKey: "hapticsOn") as? Bool ?? true
+    }
+
     static func success() {
+        guard enabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
+
     static func tap() {
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+}
+
+// MARK: - Zwijana sekcja
+
+/// Lekka, w pełni sterowana zwijka — własna zamiast DisclosureGroup, żeby
+/// wyglądała spójnie z resztą ciemnego motywu.
+struct CollapsibleSection<Content: View>: View {
+    let title: String
+    let count: Int
+    @Binding var isExpanded: Bool
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.spring(duration: 0.3)) { isExpanded.toggle() }
+            } label: {
+                HStack {
+                    Text("\(title) (\(count))")
+                        .font(.caption.bold())
+                        .kerning(1.1)
+                        .foregroundColor(.appMuted)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.bold())
+                        .foregroundColor(.appMuted)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                content()
+            }
+        }
     }
 }

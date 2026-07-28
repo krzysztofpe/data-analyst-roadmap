@@ -31,8 +31,11 @@ bez przytłaczających list, za to z dopaminą.
   kołem oraz uziemienie 5-4-3-2-1 na stres i przytłoczenie. Dostępny jednym
   tapnięciem z nagłówka w każdym miejscu aplikacji.
 - **✨ Dopamina** — XP, poziomy, konfetti, haptyka i pochwały po każdym zrobionym kroku.
-- **🏆 Cel dnia: 3 zadania** — mały, osiągalny cel z pierścieniem postępu;
-  po trzecim zadaniu fanfary, reszta dnia to czysty bonus.
+- **🏆 Cel dnia (1–5 zadań)** — mały, osiągalny cel z pierścieniem postępu;
+  po jego zrobieniu fanfary, reszta dnia to czysty bonus. Ustawiasz go pod
+  siebie — ma być do zrobienia w gorszy dzień, nie ambitny.
+- **🗄️ Archiwum** — zrobione z poprzednich dni schodzą z oczu do zwijanej
+  sekcji, żeby lista nie puchła i nie przytłaczała samym rozmiarem.
 - **↷ Pomiń** — obecne zadanie blokuje? Odłóż je na później bez poczucia winy
   i zobacz następne (wraca przy kolejnym uruchomieniu).
 - **⚡🪫 Poziomy energii** — oznacz zadania „na pełną baterię" albo „na zombie
@@ -43,8 +46,10 @@ bez przytłaczających list, za to z dopaminą.
 - **💾 Kopia zapasowa** — eksport i przywracanie wszystkich danych jako JSON
   (przez arkusz udostępniania / aplikację Pliki).
 - **📈 Twój tydzień** — miniwykres ukończonych zadań z ostatnich 7 dni.
-- **⚙️ Ustawienia** — statystyki postępów, powtórka wprowadzenia, wymazanie
-  danych (z podwójnym potwierdzeniem).
+- **⚙️ Ustawienia** — cel dnia, wibracje, statystyki postępów, powtórka
+  wprowadzenia, wymazanie danych (z podwójnym potwierdzeniem).
+- **♿ Dostępność** — etykiety VoiceOver na przyciskach-ikonach, wyłączalne
+  wibracje i poszanowanie systemowego „Ogranicz ruch" (bez konfetti).
 - **👋 Onboarding** — 4 szybkie karty przy pierwszym uruchomieniu, bez ściany tekstu.
 - **🔔 Powiadomienie timera** — koniec sesji skupienia da znać nawet przy
   zablokowanym ekranie; odliczanie liczone od daty końcowej, więc działa w tle.

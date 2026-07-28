@@ -22,6 +22,10 @@ final class AppStore: ObservableObject {
     @Published var forcedTaskID: UUID?
     /// Ile dni minęło od ostatniego otwarcia — do ciepłego powitania po przerwie.
     @Published var daysAway: Int = 0
+    /// Ile zadań dziennie wystarczy, żeby dzień uznać za udany (1–5).
+    @Published var dailyGoal: Int {
+        didSet { UserDefaults.standard.set(dailyGoal, forKey: "dailyGoal") }
+    }
 
     enum Tab: Hashable { case now, tasks, habits, timer, life }
 
@@ -34,6 +38,8 @@ final class AppStore: ObservableObject {
     ]
 
     init() {
+        let savedGoal = UserDefaults.standard.integer(forKey: "dailyGoal")
+        dailyGoal = (1...5).contains(savedGoal) ? savedGoal : 3
         load()
         checkReturn()
         drainInbox()
@@ -116,18 +122,36 @@ final class AppStore: ObservableObject {
 
     // MARK: - Zadania
 
-    var sortedTasks: [TodoTask] {
-        tasks.sorted { a, b in
-            if a.done != b.done { return !a.done }
-            if a.isFrog != b.isFrog { return a.isFrog }
-            return a.createdAt > b.createdAt
+    /// Do zrobienia: żaba na wierzchu, potem od najnowszych.
+    var activeTasks: [TodoTask] {
+        tasks.filter { !$0.done }
+            .sorted { a, b in
+                if a.isFrog != b.isFrog { return a.isFrog }
+                return a.createdAt > b.createdAt
+            }
+    }
+
+    /// Zrobione w poprzednich dniach — schodzą z oczu do archiwum, żeby lista
+    /// nie puchła w nieskończoność i nie przytłaczała samym rozmiarem.
+    var archivedTasks: [TodoTask] {
+        tasks.filter { task in
+            guard task.done else { return false }
+            guard let d = task.doneAt else { return true }
+            return Dates.dayKey(d) != Dates.dayKey()
         }
+        .sorted { ($0.doneAt ?? .distantPast) > ($1.doneAt ?? .distantPast) }
+    }
+
+    func clearArchive() {
+        let archivedIDs = Set(archivedTasks.map(\.id))
+        tasks.removeAll { archivedIDs.contains($0.id) }
+        save()
     }
 
     /// Jedno zadanie do pokazania w widoku „Teraz": kostka > żaba > dopasowane
     /// do energii > najnowsze otwarte.
     var currentTask: TodoTask? {
-        let open = sortedTasks.filter { !$0.done }
+        let open = activeTasks
         if let forced = forcedTaskID, let task = open.first(where: { $0.id == forced }) {
             return task
         }
@@ -206,10 +230,14 @@ final class AppStore: ObservableObject {
         skippedIDs.remove(tasks[i].id)
         if forcedTaskID == tasks[i].id { forcedTaskID = nil }
         reward(10, big: true)
-        if doneToday.count == 3 {
-            showPraise("🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus.")
-            confettiBurst += 1
-        }
+        celebrateIfGoalReached()
+    }
+
+    /// Cel dnia osiągnięty — jednorazowe fanfary, bez licytowania się dalej.
+    private func celebrateIfGoalReached() {
+        guard doneToday.count == dailyGoal else { return }
+        showPraise("🏆 Cel dnia zrobiony! Reszta to czysty bonus.")
+        confettiBurst += 1
     }
 
     func toggleStep(taskID: TodoTask.ID, stepID: TaskStep.ID) {
@@ -249,15 +277,20 @@ final class AppStore: ObservableObject {
         task.doneAt = Date()
         tasks.insert(task, at: 0)
         reward(10, big: true)
-        if doneToday.count == 3 {
-            showPraise("🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus.")
-            confettiBurst += 1
-        }
+        celebrateIfGoalReached()
     }
 
     func deleteTask(_ id: TodoTask.ID) {
         tasks.removeAll { $0.id == id }
         if forcedTaskID == id { forcedTaskID = nil }
+        save()
+    }
+
+    func renameTask(_ id: TodoTask.ID, to title: String) {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let i = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[i].title = trimmed
         save()
     }
 

@@ -292,11 +292,11 @@ struct NowView: View {
         }
     }
 
-    /// Cel dnia: 3 zadania. Mały, osiągalny — reszta to bonus.
+    /// Cel dnia — mały i osiągalny. Reszta to bonus, nie dług.
     @ViewBuilder
     private var dailyGoalBadge: some View {
         let count = store.doneToday.count
-        if count >= 3 {
+        if count >= store.dailyGoal {
             Text("🏆 Cel dnia!")
                 .font(.caption.bold())
                 .foregroundColor(.appWarn)
@@ -306,18 +306,18 @@ struct NowView: View {
                     Circle()
                         .stroke(Color.appCard2, lineWidth: 4)
                     Circle()
-                        .trim(from: 0, to: CGFloat(count) / 3)
+                        .trim(from: 0, to: CGFloat(count) / CGFloat(store.dailyGoal))
                         .stroke(Color.appAccent,
                                 style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
                 .frame(width: 18, height: 18)
                 .animation(.spring(duration: 0.5), value: count)
-                Text("\(count)/3")
+                Text("\(count)/\(store.dailyGoal)")
                     .font(.caption.bold())
                     .foregroundColor(.appMuted)
             }
-            .accessibilityLabel("Cel dnia: \(count) z 3 zadań")
+            .accessibilityLabel("Cel dnia: \(count) z \(store.dailyGoal) zadań")
         }
     }
 

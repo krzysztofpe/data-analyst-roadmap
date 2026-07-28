@@ -126,6 +126,9 @@ struct PraiseBanner: View {
 struct ConfettiOverlay: View {
     let trigger: Int
     @State private var particles: [Particle] = []
+    /// Konfetti to nagroda, ale dla części osób ruch na ekranie jest męczący
+    /// albo wręcz wywołuje mdłości — szanujemy systemowe „Ogranicz ruch".
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     struct Particle: Identifiable {
         let id = UUID()
@@ -151,6 +154,7 @@ struct ConfettiOverlay: View {
     }
 
     private func spawn() {
+        guard !reduceMotion else { return }
         let emojis = ["🎉", "✨", "⭐", "💜", "🎊", "💥"]
         let batch = (0..<18).map { _ in
             Particle(

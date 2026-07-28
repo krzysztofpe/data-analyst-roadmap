@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage("onboardingSeen") private var onboardingSeen = false
+    @AppStorage("hapticsOn") private var hapticsOn = true
     @State private var confirmWipe = false
 
     // Przypomnienia: włączniki + godziny (sekundy od północy).
@@ -41,6 +42,7 @@ struct SettingsView: View {
                     .padding(.top, 8)
 
                     statsCard
+                    preferencesCard
                     remindersCard
                     backupCard
                     aboutCard
@@ -91,6 +93,41 @@ struct SettingsView: View {
         } message: {
             Text("Upewnij się, że to kopia zapasowa z Ogarnito (plik .json).")
         }
+    }
+
+    // MARK: - Preferencje
+
+    private var preferencesCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionTitle("🎚️ Pod siebie")
+
+            VStack(alignment: .leading, spacing: 4) {
+                Stepper(value: $store.dailyGoal, in: 1...5) {
+                    Text("Cel dnia: \(store.dailyGoal) \(store.dailyGoal == 1 ? "zadanie" : "zadania")")
+                        .font(.subheadline.bold())
+                }
+                .tint(.appAccent)
+                Text("Ustaw tyle, ile realnie ogarniasz w gorszy dzień — cel ma być do zrobienia, nie ambitny.")
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
+
+            Divider().overlay(Color.appLine)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(isOn: $hapticsOn) {
+                    Text("Wibracje")
+                        .font(.subheadline.bold())
+                }
+                .tint(.appAccent)
+                Text("Krótka wibracja przy każdym zaliczeniu. Dla jednych nagroda, dla innych rozpraszacz.")
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
     }
 
     // MARK: - Przypomnienia
