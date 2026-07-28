@@ -41,6 +41,13 @@ na Macu i w App Store Connect.
 >
 > 🎯 JEDNO ZADANIE NARAZ — widzisz tylko następny mały krok, nie górę roboty.
 > 🧠 BRAIN DUMP — wyrzuć wszystko z głowy w 5 sekund, apka pamięta za Ciebie.
+> 🎙️ SIRI — powiedz „Hej Siri, dodaj zadanie do Ogarnito" i łap myśl, zanim
+> wyparuje. Bez odblokowywania telefonu, bez wypadania z tego, co robisz.
+> ❄️ STREAK Z DNIEM ŁASKI — jedna wpadka nie zeruje łańcucha. Bo to nie
+> wpadka rujnuje nawyk, tylko wstyd po niej.
+> 💜 CIEPŁY POWRÓT — po tygodniu przerwy apka nie wita Cię stertą zaległości
+> ani czerwonymi liczbami. Wita Cię „dobrze Cię widzieć".
+> ✓ ZROBIONE SPOZA LISTY — zalicz robotę, której nikt nie zaplanował.
 > 🔪 MIKRO-KROKI — rozbij każde zadanie na kawałki po maks 10 minut.
 > 🐸 ZJEDZ ŻABĘ — oznacz najważniejszą rzecz dnia i zrób ją najpierw.
 > ⏱️ TIMER SKUPIENIA — 2/5/15/25 minut. Umowa z mózgiem: tylko tyle, potem
@@ -60,6 +67,17 @@ na Macu i w App Store Connect.
 
 **Słowa kluczowe (100 znaków):**
 > adhd,planer,zadania,nawyki,skupienie,pomodoro,prokrastynacja,brain dump,streak,timer
+
+**Do przetestowania przed wysyłką (poza zwykłym klikaniem):**
+- [ ] Siri: „Hej Siri, dodaj zadanie do Ogarnito" → zadanie pojawia się po
+      otwarciu apki (skrzynka `inbox.json` jest opróżniana przy starcie i
+      powrocie na pierwszy plan).
+- [ ] Streak: odhacz nawyk przez 3 dni, pomiń 1, odhacz kolejny — łańcuch ma
+      trwać dalej z ikoną ❄️.
+- [ ] Powrót po przerwie: przestaw zegar systemowy o 3 dni do przodu →
+      karta powitalna w „Teraz".
+- [ ] Timer: start 5 min, zablokuj ekran na 2 minuty → po powrocie zegar ma
+      pokazywać ~3 min, a powiadomienie przyjść o czasie.
 
 **Kategoria:** Productivity · **Age rating:** 4+
 

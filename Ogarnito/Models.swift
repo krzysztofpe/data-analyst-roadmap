@@ -101,6 +101,16 @@ extension Color {
     static let appFrog = Color(hex: 0x4ADE80)
 }
 
+// MARK: - Pieniądze
+
+enum Money {
+    /// Waluta z ustawień telefonu — apka ma działać tak samo dobrze
+    /// w Warszawie, jak w Berlinie czy Chicago.
+    static var code: String {
+        Locale.current.currency?.identifier ?? "PLN"
+    }
+}
+
 // MARK: - Wspólne elementy UI
 
 /// Tło aplikacji — delikatny pionowy gradient zamiast płaskiego koloru.

@@ -7,7 +7,7 @@ struct OnboardingView: View {
 
     private let pages: [(emoji: String, title: String, text: String)] = [
         ("🧠", "Zrzuć wszystko z głowy",
-         "Brain dump: wpisujesz, apka pamięta. Głowa jest od wymyślania, nie od pamiętania."),
+         "Wpisujesz albo mówisz: „Hej Siri, dodaj zadanie do Ogarnito”. Głowa jest od wymyślania, nie od pamiętania."),
         ("🎯", "Jedno zadanie naraz",
          "Żadnych przytłaczających list. Widzisz tylko następny mały krok — i go robisz."),
         ("💜", "Życie też się liczy",

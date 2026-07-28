@@ -105,13 +105,10 @@ struct FocusTimerView: View {
             remaining = max(0, Int(end.timeIntervalSinceNow.rounded()))
             if remaining <= 0 { finish() }
         }
-        .onChange(of: store.timerRequest) {
-            // Inne widoki (np. „Nie mogę zacząć") mogą poprosić o start z zadanym czasem.
-            guard let minutes = store.timerRequest else { return }
-            selectPreset(minutes)
-            start()
-            store.timerRequest = nil
-        }
+        .onChange(of: store.timerRequest) { consumeTimerRequest() }
+        // Zakładka timera powstaje dopiero przy pierwszym wejściu, więc samo
+        // onChange przegapiłoby prośbę wysłaną z innego widoku.
+        .onAppear { consumeTimerRequest() }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
         }
@@ -124,6 +121,14 @@ struct FocusTimerView: View {
     private var stateLabel: String {
         if isRunning { return "lecimy!" }
         return remaining == totalSeconds ? "gotowy" : "pauza"
+    }
+
+    /// Inne widoki (np. „Nie mogę zacząć") proszą o start z zadanym czasem.
+    private func consumeTimerRequest() {
+        guard let minutes = store.timerRequest else { return }
+        selectPreset(minutes)
+        start()
+        store.timerRequest = nil
     }
 
     private func selectPreset(_ minutes: Int) {

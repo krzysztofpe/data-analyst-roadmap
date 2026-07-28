@@ -13,7 +13,7 @@ struct HabitsView: View {
                 if store.habits.isEmpty {
                     VStack(spacing: 8) {
                         Text("🌱").font(.system(size: 40))
-                        Text("Zacznij od JEDNEGO nawyku.\nMałego. Śmiesznie małego.")
+                        Text("Zacznij od JEDNEGO nawyku.\nMałego. Śmiesznie małego.\n\nJeden pominięty dzień nic nie zepsuje — masz ❄️ dzień łaski.")
                             .font(.subheadline)
                             .foregroundColor(.appMuted)
                             .multilineTextAlignment(.center)
@@ -36,7 +36,7 @@ struct HabitsView: View {
                         .foregroundColor(.white)
                 }
 
-                Text("🔥 Nie przerywaj łańcucha! A jak przerwiesz — trudno, wracasz następnego dnia. Jeden pominięty dzień to nie porażka.")
+                Text("🔥 Jeden pominięty dzień nie zeruje streaka — dostajesz ❄️ dzień łaski. Porażka to dopiero rzucenie tego w cholerę, a nie jedna wpadka.")
                     .font(.caption)
                     .foregroundColor(.appMuted)
             }
@@ -69,15 +69,22 @@ struct HabitCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 10) {
+        let info = store.streakInfo(for: habit)
+        return VStack(spacing: 10) {
             HStack {
                 Text(habit.name)
                     .font(.headline)
                 Spacer()
-                let streak = store.streak(for: habit)
-                Text(streak > 0 ? "🔥 \(streak)" : "—")
+                if info.graceDay != nil {
+                    Text("❄️")
+                        .font(.caption)
+                        .accessibilityLabel("Dzień łaski użyty")
+                }
+                Text(info.count > 0 ? "🔥 \(info.count)" : "—")
                     .font(.subheadline.bold())
                     .foregroundColor(.appWarn)
+                    .contentTransition(.numericText())
+                    .animation(.spring(duration: 0.4), value: info.count)
                 Button {
                     confirmDelete = true
                 } label: {
@@ -121,9 +128,13 @@ struct HabitCard: View {
                                     Image(systemName: "checkmark")
                                         .font(.caption.bold())
                                         .foregroundColor(Color(hex: 0x06281C))
+                                        .transition(.scale.combined(with: .opacity))
+                                } else if key == info.graceDay {
+                                    Text("❄️").font(.caption2)
                                 }
                             }
                             .aspectRatio(1, contentMode: .fit)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.55), value: hit)
                         }
                         .buttonStyle(.plain)
                         .disabled(!isToday)

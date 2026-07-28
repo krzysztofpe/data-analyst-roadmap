@@ -20,6 +20,8 @@ final class AppStore: ObservableObject {
     @Published var currentEnergy: EnergyLevel?
     /// Zadanie wskazane kostką 🎲 — ma pierwszeństwo, dopóki nie zostanie zrobione/pominięte.
     @Published var forcedTaskID: UUID?
+    /// Ile dni minęło od ostatniego otwarcia — do ciepłego powitania po przerwie.
+    @Published var daysAway: Int = 0
 
     enum Tab: Hashable { case now, tasks, habits, timer, life }
 
@@ -33,6 +35,43 @@ final class AppStore: ObservableObject {
 
     init() {
         load()
+        checkReturn()
+        drainInbox()
+    }
+
+    // MARK: - Powrót po przerwie
+
+    /// Zero wyrzutów sumienia: apka tylko odnotowuje, że Cię nie było,
+    /// żeby przywitać Cię ciepło zamiast straszyć zaległościami.
+    private func checkReturn() {
+        let defaults = UserDefaults.standard
+        let todayKey = Dates.dayKey()
+        if let last = defaults.string(forKey: "lastOpenDay"),
+           last != todayKey,
+           let lastDate = Dates.dayFormatter.date(from: last),
+           let diff = Calendar.current.dateComponents(
+               [.day], from: lastDate, to: Date()).day {
+            daysAway = max(0, diff)
+        }
+        defaults.set(todayKey, forKey: "lastOpenDay")
+    }
+
+    func dismissWelcomeBack() {
+        withAnimation { daysAway = 0 }
+    }
+
+    // MARK: - Skrzynka z Siri / Skrótów
+
+    /// Zadania dorzucone przez Siri lub Skróty lądują w osobnym pliku,
+    /// żeby nie ścigać się o zapis z działającą aplikacją. Tu je zbieramy.
+    func drainInbox() {
+        let captured = TaskInbox.drain()
+        guard !captured.isEmpty else { return }
+        for title in captured.reversed() {
+            tasks.insert(TodoTask(title: title), at: 0)
+        }
+        save()
+        showPraise("🎙️ Złapane: \(captured.count) \(captured.count == 1 ? "zadanie" : "zadania")")
     }
 
     // MARK: - XP / poziomy
@@ -200,6 +239,22 @@ final class AppStore: ObservableObject {
         save()
     }
 
+    /// Zrobione, choć nigdy nie było na liście. ADHD-dzień w połowie składa
+    /// się z takich rzeczy — i normalnie nikt za nie nie klaszcze.
+    func logDoneOutsideList(_ title: String) {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        var task = TodoTask(title: trimmed)
+        task.done = true
+        task.doneAt = Date()
+        tasks.insert(task, at: 0)
+        reward(10, big: true)
+        if doneToday.count == 3 {
+            showPraise("🏆 Dzisiejsza trójka zrobiona! Reszta to czysty bonus.")
+            confettiBurst += 1
+        }
+    }
+
     func deleteTask(_ id: TodoTask.ID) {
         tasks.removeAll { $0.id == id }
         if forcedTaskID == id { forcedTaskID = nil }
@@ -241,22 +296,43 @@ final class AppStore: ObservableObject {
         }
     }
 
-    /// Streak liczony wstecz; niezrobione „dzisiaj" jeszcze nie łamie łańcucha.
-    func streak(for habit: Habit) -> Int {
-        var day = Date()
+    struct StreakInfo {
+        var count: Int
+        /// Dzień uratowany łaską — pokazywany w siatce jako ❄️.
+        var graceDay: String?
+    }
+
+    /// Streak z jednym dniem łaski: pojedynczy pominięty dzień NIE zeruje
+    /// łańcucha. Zerwany streak to najczęstszy powód porzucania apek przez
+    /// osoby z ADHD — tu wpadka kosztuje płatek śniegu, nie cały dorobek.
+    func streakInfo(for habit: Habit) -> StreakInfo {
         let cal = Calendar.current
+        var day = Date()
+        // Niezrobione „dzisiaj" jeszcze nie łamie łańcucha — liczymy od wczoraj.
         if !habit.doneDays.contains(Dates.dayKey(day)) {
-            guard let yesterday = cal.date(byAdding: .day, value: -1, to: day) else { return 0 }
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: day) else {
+                return StreakInfo(count: 0, graceDay: nil)
+            }
             day = yesterday
         }
         var count = 0
-        while habit.doneDays.contains(Dates.dayKey(day)) {
-            count += 1
+        var graceDay: String?
+        while true {
+            let key = Dates.dayKey(day)
+            if habit.doneDays.contains(key) {
+                count += 1
+            } else if graceDay == nil && count > 0 {
+                graceDay = key          // jednorazowa łaska w obrębie łańcucha
+            } else {
+                break
+            }
             guard let prev = cal.date(byAdding: .day, value: -1, to: day) else { break }
             day = prev
         }
-        return count
+        return StreakInfo(count: count, graceDay: graceDay)
     }
+
+    func streak(for habit: Habit) -> Int { streakInfo(for: habit).count }
 
     // MARK: - Statystyki tygodnia
 

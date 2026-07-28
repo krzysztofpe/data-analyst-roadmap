@@ -9,8 +9,15 @@ bez przytłaczających list, za to z dopaminą.
   przytłaczać. Tryb „🐸 zjedz żabę": oznacz najważniejszą rzecz dnia.
 - **📝 Zadania + brain dump** — wrzucasz wszystko z głowy bez planowania i oceniania.
   Każde zadanie rozbijesz na mikro-kroki (max 10 minut każdy).
-- **🔥 Nawyki** — siatka ostatnich 7 dni i licznik streaka. Nie przerywaj łańcucha —
-  a jak przerwiesz, wracasz następnego dnia, bez dramatu.
+- **🔥 Nawyki z dniem łaski ❄️** — siatka 7 dni i streak, który **nie zeruje się**
+  po jednej wpadce. Zerwany łańcuch to najczęstszy powód kasowania apek
+  nawykowych — tutaj kosztuje płatek śniegu, nie cały dorobek.
+- **🎙️ „Hej Siri, dodaj zadanie do Ogarnito"** — myśl trafia na listę bez
+  odblokowywania telefonu i bez wypadania z tego, co właśnie robisz.
+- **💜 Ciepły powrót po przerwie** — po kilku dniach nieobecności apka wita
+  bez wyrzutów i bez sterty zaległości (bo ich tu w ogóle nie ma).
+- **✓ „Zrobiłem coś spoza listy"** — zalicz robotę, której nigdy nie zaplanowałeś.
+  Połowa ADHD-dnia to takie rzeczy i normalnie nikt za nie nie klaszcze.
 - **⏱️ Timer skupienia** — 2/5/15/25 minut. Umowa z mózgiem: pracujesz *tylko tyle*,
   potem możesz przestać. Ekran nie gaśnie w trakcie sesji.
 - **😩 „Nie mogę zacząć"** — odblokowanie prokrastynacji: 2 minuty byle jak,
@@ -80,6 +87,8 @@ Ogarnito/
 ├── AppStore.swift           # stan aplikacji, XP/poziomy, persystencja JSON
 ├── Notifications.swift      # lokalne powiadomienie o końcu sesji skupienia
 ├── Reminders.swift          # codzienne przypomnienia (plan / jedzenie / wieczór)
+├── AppIntents.swift         # przechwytywanie zadań przez Siri i Skróty
+├── TaskInbox.swift          # skrzynka na zadania złapane spoza aplikacji
 ├── PrivacyInfo.xcprivacy    # manifest prywatności (wymagany przez Apple)
 └── Views/
     ├── RootView.swift       # TabView, nagłówek XP + SOS + ustawienia, konfetti

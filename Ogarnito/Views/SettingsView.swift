@@ -204,7 +204,7 @@ struct SettingsView: View {
                 Text("Zaoszczędzone na impulsach")
                     .foregroundColor(.appMuted)
                 Spacer()
-                Text(store.savedTotal, format: .currency(code: "PLN"))
+                Text(store.savedTotal, format: .currency(code: Money.code))
                     .bold()
                     .foregroundColor(.appGood)
             }
@@ -247,6 +247,13 @@ struct SettingsView: View {
             }
 
             Divider().overlay(Color.appLine)
+
+            HStack(alignment: .top, spacing: 10) {
+                Text("🎙️")
+                Text("Powiedz „Hej Siri, dodaj zadanie do Ogarnito”, a myśl trafi na listę bez odblokowywania telefonu.")
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
 
             HStack(alignment: .top, spacing: 10) {
                 Text("🔒")

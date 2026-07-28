@@ -6,11 +6,16 @@ import Charts
 struct NowView: View {
     @EnvironmentObject var store: AppStore
     @State private var showStuck = false
+    @State private var showLogDone = false
+    @State private var doneText = ""
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 greetingHeader
+                if store.daysAway >= 2 {
+                    welcomeBackCard
+                }
                 nowCard
                 doneTodaySection
                 if store.weekStats.contains(where: { $0.count > 0 }) {
@@ -193,6 +198,33 @@ struct NowView: View {
         .shadow(color: Color.appAccentDark.opacity(0.35), radius: 18, x: 0, y: 8)
     }
 
+    /// Powrót po przerwie bez ani jednego wyrzutu sumienia. Moment, w którym
+    /// inne apki witają stertą zaległości — i w którym ADHD-owcy je kasują.
+    private var welcomeBackCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Dobrze Cię widzieć 💜")
+                .font(.headline)
+            Text("Nie było Cię \(store.daysAway) dni — i nic się nie stało. Nic nie przepadło, nic Cię nie goni, żadnych zaległości. Po prostu wybierz jedną małą rzecz.")
+                .font(.subheadline)
+                .foregroundColor(.appMuted)
+            Button {
+                store.dismissWelcomeBack()
+            } label: {
+                Text("Jasne, zaczynamy")
+                    .font(.subheadline.bold())
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appAccent.opacity(0.5)))
+        .transition(.scale.combined(with: .opacity))
+    }
+
     private func ghostButton(_ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
@@ -234,6 +266,28 @@ struct NowView: View {
                     .padding(12)
                     .background(Color.appCard, in: RoundedRectangle(cornerRadius: 14))
                 }
+            }
+
+            Button {
+                showLogDone = true
+            } label: {
+                Text("+ Zrobiłem coś spoza listy")
+                    .font(.footnote.bold())
+                    .foregroundColor(.appMuted)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(Color.appCard.opacity(0.6),
+                                in: RoundedRectangle(cornerRadius: 12))
+            }
+            .alert("Co takiego ogarnąłeś?", isPresented: $showLogDone) {
+                TextField("np. zadzwoniłem do przychodni", text: $doneText)
+                Button("Zalicz to ✓") {
+                    store.logDoneOutsideList(doneText)
+                    doneText = ""
+                }
+                Button("Anuluj", role: .cancel) { doneText = "" }
+            } message: {
+                Text("Nie było na liście, a i tak się liczy. Serio.")
             }
         }
     }

@@ -116,7 +116,7 @@ struct LifeView: View {
 
             if store.savedTotal > 0 {
                 (Text("✨ Zaoszczędzone: ")
-                 + Text(store.savedTotal, format: .currency(code: "PLN")).bold())
+                 + Text(store.savedTotal, format: .currency(code: Money.code)).bold())
                     .font(.subheadline)
                     .foregroundColor(.appGood)
                     .frame(maxWidth: .infinity)
@@ -130,7 +130,7 @@ struct LifeView: View {
                     .submitLabel(.done)
                     .padding(11)
                     .background(Color.appCard2, in: RoundedRectangle(cornerRadius: 11))
-                TextField("zł", text: $itemPrice)
+                TextField("Cena", text: $itemPrice)
                     .keyboardType(.decimalPad)
                     .frame(width: 70)
                     .padding(11)
@@ -165,7 +165,7 @@ struct LifeView: View {
                             .strikethrough(item.decision == .skipped)
                             .foregroundColor(.appMuted)
                         Spacer()
-                        Text(item.price, format: .currency(code: "PLN"))
+                        Text(item.price, format: .currency(code: Money.code))
                             .font(.footnote.bold())
                             .foregroundColor(item.decision == .skipped ? .appGood : .appMuted)
                     }
@@ -195,7 +195,7 @@ struct ImpulseRow: View {
                 Text(item.name)
                     .font(.subheadline.bold())
                 Spacer()
-                Text(item.price, format: .currency(code: "PLN"))
+                Text(item.price, format: .currency(code: Money.code))
                     .font(.subheadline)
                     .foregroundColor(.appMuted)
             }
