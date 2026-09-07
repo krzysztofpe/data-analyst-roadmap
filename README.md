@@ -32,6 +32,15 @@ bez przytłaczających list, za to z dopaminą.
 - **🌬️ Oddech ratunkowy** — pełnoekranowy oddech pudełkowy 4-4-4-4 z animowanym
   kołem oraz uziemienie 5-4-3-2-1 na stres i przytłoczenie. Dostępny jednym
   tapnięciem z nagłówka w każdym miejscu aplikacji.
+- **🛑 Przerwanie scrolla** — jednym tapnięciem albo głosem *w trakcie* reelsów
+  („Hej Siri, przerwij scroll w Ogarnito"). Dwadzieścia sekund pauzy, a potem
+  pytanie o potrzebę pod spodem — nuda, napięcie, zmęczenie czy unikanie —
+  i konkretna alternatywa zamiast morałów. Liczymy przyłapania, nie potknięcia.
+- **🌙 Wieczorne wyciszenie** — od ustawionej godziny cała apka jest ocieplona
+  i przygaszona (mniej niebieskiego światła), a konfetti milknie. Do tego
+  pięciokrokowy rytuał na dobranoc i przypomnienie o odłożeniu telefonu.
+  W ustawieniach jest też przewodnik po tym, co potrafi **wyłącznie iOS**:
+  Night Shift, limity apek, Przestój i zdejmowanie ikon z ekranu.
 - **✨ Dopamina** — XP, poziomy, konfetti, haptyka i pochwały po każdym zrobionym kroku.
 - **🏆 Cel dnia (1–5 zadań)** — mały, osiągalny cel z pierścieniem postępu;
   po jego zrobieniu fanfary, reszta dnia to czysty bonus. Ustawiasz go pod
@@ -123,7 +132,8 @@ Ogarnito/
     ├── TasksView.swift      # brain dump + lista zadań z mikro-krokami
     ├── HabitsView.swift     # nawyki, siatka 7 dni, streaki
     ├── FocusTimerView.swift # timer skupienia z pierścieniem
-    ├── LifeView.swift       # „Życie": jedzenie, woda, stres, portfel impulsów
+    ├── LifeView.swift       # „Życie": scroll, wieczór, jedzenie, stres, impulsy
+    ├── ScreenBreakView.swift# przerwanie scrolla: pauza i pytanie o potrzebę
     └── BreathingView.swift  # oddech 4-4-4-4 + uziemienie 5-4-3-2-1
 ```
 

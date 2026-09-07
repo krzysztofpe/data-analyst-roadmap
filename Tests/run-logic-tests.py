@@ -97,7 +97,9 @@ let h = Habit(name: "Woda", doneDays: ["2026-07-01", "2026-07-02"])
 var imp = ImpulseItem(name: "Sluchawki", price: 499.99)
 imp.decision = .skipped; imp.decidedAt = Date()
 let snap = Snapshot(tasks: [t], habits: [h], xp: 245, impulses: [imp],
-                    care: ["2026-07-28": DayCare(meals: ["obiad"], water: 5, focus: 90)])
+                    care: ["2026-07-28": DayCare(meals: ["obiad"], water: 5, focus: 90,
+                                                scrollCatches: 4,
+                                                winddown: ["phone", "light"])])
 
 let data = try! JSONEncoder().encode(snap)
 let back = try! JSONDecoder().decode(Snapshot.self, from: data)
@@ -114,6 +116,10 @@ check("czas skupienia zachowany",
       back.tasks.first?.focusMinutes == 45 && back.care?["2026-07-28"]?.focus == 90)
 check("formatowanie czasu", TimeText.minutes(45) == "45 min"
       && TimeText.minutes(60) == "1 h" && TimeText.minutes(135) == "2 h 15 min")
+check("przerwania scrolla i rytual wieczorny zachowane",
+      back.care?["2026-07-28"]?.scrollCatches == 4
+      && back.care?["2026-07-28"]?.winddown == ["phone", "light"])
+check("rytual ma piec krokow", WindDownStep.allCases.count == 5)
 
 // Zapis z wczesniejszej wersji apki: bez impulses, care i energy.
 let legacy = """
@@ -157,6 +163,7 @@ def build_persistence_program() -> str:
         "struct DayCare: Codable, Hashable {",
         "struct ImpulseItem: Identifiable, Codable, Hashable {",
         "enum TimeText {",
+        "enum WindDownStep: String, CaseIterable, Identifiable {",
     ]
     parts = [block(models, h) for h in types]
     snapshot = block(store, "private struct Snapshot: Codable {").replace(
