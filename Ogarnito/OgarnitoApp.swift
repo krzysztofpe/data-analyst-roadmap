@@ -13,7 +13,10 @@ struct OgarnitoApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             // Po powrocie do apki zabieramy to, co Siri/Skróty złapały w tle.
-            if phase == .active { store.drainInbox() }
+            if phase == .active {
+                store.drainInbox()
+                store.consumePendingScreenBreak()
+            }
         }
     }
 }

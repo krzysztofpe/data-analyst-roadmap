@@ -16,6 +16,8 @@ struct LifeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                scrollCard
+                eveningCard
                 mealsCard
                 stressCard
                 walletCard
@@ -25,6 +27,102 @@ struct LifeView: View {
         .background(AppBackground())
         .scrollDismissesKeyboard(.interactively)
         .buttonStyle(ScaleButtonStyle())
+    }
+
+    // MARK: - Scroll
+
+    private var scrollCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle("📱 Scroll")
+            Text("Przewijasz reelsy trzeci kwadrans i nawet nie wiesz kiedy? Nie musisz mieć silnej woli — wystarczy, że tu klikniesz.")
+                .font(.caption)
+                .foregroundColor(.appMuted)
+
+            Button {
+                store.showScreenBreak = true
+            } label: {
+                Text("🛑 Przyłapałem się na scrollowaniu")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(
+                        LinearGradient(colors: [Color(hex: 0xB4443C), Color(hex: 0x8C2F2F)],
+                                       startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: 14)
+                    )
+                    .foregroundColor(.white)
+            }
+
+            if store.scrollCatchesToday > 0 {
+                Text("Dziś przerwane \(store.scrollCatchesToday)× — i tyle samo razy wygrane 💪")
+                    .font(.footnote.bold())
+                    .foregroundColor(.appGood)
+                    .frame(maxWidth: .infinity)
+            }
+
+            Text("🎙️ W środku reelsów powiedz: „Hej Siri, przerwij scroll w Ogarnito”.")
+                .font(.caption2)
+                .foregroundColor(.appMuted)
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
+    }
+
+    // MARK: - Wieczór i sen
+
+    private var eveningCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle("🌙 Wieczór i sen")
+
+            TimelineView(.everyMinute) { _ in
+                if store.isEvening {
+                    Text(store.eveningTint
+                         ? "Tryb wieczorny działa — apka jest ocieplona i przygaszona, konfetti śpi. Mózg potrzebuje ciemności, żeby ruszyła melatonina."
+                         : "Wieczór. Ocieplenie ekranu masz wyłączone w ustawieniach.")
+                        .font(.caption)
+                        .foregroundColor(.appWarn)
+                } else {
+                    Text("Wyciszenie włączy się o \(store.eveningHour):00 — za \(store.hoursToEvening) godz. Ekran zrobi się cieplejszy, a apka przestanie rzucać konfetti.")
+                        .font(.caption)
+                        .foregroundColor(.appMuted)
+                }
+            }
+
+            Divider().overlay(Color.appLine)
+
+            Text("Rytuał na dobranoc")
+                .font(.subheadline.bold())
+
+            ForEach(WindDownStep.allCases) { step in
+                let done = store.windDownToday.contains(step.rawValue)
+                Button {
+                    store.toggleWindDown(step)
+                } label: {
+                    HStack(spacing: 11) {
+                        CheckCircle(done: done, size: 24) { store.toggleWindDown(step) }
+                            .allowsHitTesting(false)
+                        Text(step.label)
+                            .font(.subheadline)
+                            .strikethrough(done)
+                            .foregroundColor(done ? .appMuted : .white)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                    }
+                }
+            }
+
+            if store.windDownDone {
+                Text("Wszystko domknięte. Dobranoc 💜")
+                    .font(.footnote.bold())
+                    .foregroundColor(.appGood)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 2)
+            }
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
     }
 
     // MARK: - Jedzenie

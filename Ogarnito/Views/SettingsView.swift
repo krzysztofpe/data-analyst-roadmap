@@ -15,6 +15,8 @@ struct SettingsView: View {
     @AppStorage("rem.meal.time") private var mealTime: Double = 13 * 3600
     @AppStorage("rem.evening.on") private var eveningOn = false
     @AppStorage("rem.evening.time") private var eveningTime: Double = 20 * 3600
+    @AppStorage("rem.winddown.on") private var windDownOn = false
+    @AppStorage("rem.winddown.time") private var windDownTime: Double = 21.5 * 3600
 
     // Kopia zapasowa.
     @State private var backupURL: URL?
@@ -43,7 +45,9 @@ struct SettingsView: View {
 
                     statsCard
                     preferencesCard
+                    eveningSettingsCard
                     remindersCard
+                    iosGuideCard
                     backupCard
                     aboutCard
                     dangerCard
@@ -130,6 +134,74 @@ struct SettingsView: View {
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
     }
 
+    // MARK: - Wieczór
+
+    private var eveningSettingsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionTitle("🌙 Wieczorne wyciszenie")
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(isOn: $store.eveningTint) {
+                    Text("Ociepl ekran wieczorem")
+                        .font(.subheadline.bold())
+                }
+                .tint(.appAccent)
+                Text("Od wybranej godziny apka robi się cieplejsza i przygaszona, a konfetti milknie. Dotyczy tylko Ogarnito — resztą telefonu rządzi Night Shift.")
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
+
+            Divider().overlay(Color.appLine)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Stepper(value: $store.eveningHour, in: 17...23) {
+                    Text("Zaczyna się o \(store.eveningHour):00")
+                        .font(.subheadline.bold())
+                }
+                .tint(.appAccent)
+                Text("Najlepiej dwie godziny przed planowanym snem.")
+                    .font(.caption)
+                    .foregroundColor(.appMuted)
+            }
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
+    }
+
+    // MARK: - Co potrafi tylko iOS
+
+    private var iosGuideCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle("📵 Ustaw raz w iPhonie")
+            Text("Żadna aplikacja nie może zablokować innej ani przyciemnić całego ekranu — to potrafi wyłącznie system. Te cztery ustawienia zrobią więcej niż jakikolwiek trik w apce:")
+                .font(.caption)
+                .foregroundColor(.appMuted)
+
+            guideRow("🌅", "Night Shift",
+                     "Ustawienia → Ekran i jasność → Night Shift. Ustaw harmonogram i przesuń suwak mocno w stronę „Cieplejsze”.")
+            guideRow("⏳", "Limity apek",
+                     "Ustawienia → Czas przed ekranem → Limity apek. Daj Instagramowi i TikTokowi np. 30 minut dziennie.")
+            guideRow("🌜", "Przestój",
+                     "Ustawienia → Czas przed ekranem → Przestój. W tych godzinach zostają tylko apki, które sam dopuścisz.")
+            guideRow("🫥", "Zdejmij ikony z ekranu",
+                     "Przytrzymaj ikonę → Usuń z ekranu początkowego. Apka zostaje w Bibliotece, ale trzeba jej poszukać — i ta sekunda zwłoki często wystarcza, żeby się rozmyślić.")
+        }
+        .padding(16)
+        .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appLine))
+    }
+
+    private func guideRow(_ emoji: String, _ title: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(emoji)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.bold())
+                Text(text).font(.caption).foregroundColor(.appMuted)
+            }
+        }
+    }
+
     // MARK: - Przypomnienia
 
     private var remindersCard: some View {
@@ -145,6 +217,8 @@ struct SettingsView: View {
                         isOn: $mealOn, time: $mealTime)
             reminderRow("🌙 Domknij dzień", kind: .evening,
                         isOn: $eveningOn, time: $eveningTime)
+            reminderRow("😴 Odłóż telefon", kind: .winddown,
+                        isOn: $windDownOn, time: $windDownTime)
         }
         .padding(16)
         .background(Color.appCard, in: RoundedRectangle(cornerRadius: 18))

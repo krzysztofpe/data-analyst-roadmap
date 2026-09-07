@@ -11,7 +11,7 @@ struct OnboardingView: View {
         ("🎯", "Jedno zadanie naraz",
          "Żadnych przytłaczających list. Widzisz tylko następny mały krok — i go robisz."),
         ("💜", "Życie też się liczy",
-         "Jedzenie, woda, oddech na stres i 48-godzinna poczekalnia na impulsywne zakupy."),
+         "Jedzenie, woda, oddech na stres, przerywanie scrolla i wieczorne wyciszenie ekranu."),
         ("✨", "Dopamina wbudowana",
          "XP, poziomy, konfetti i streaki. Twój mózg lubi nagrody — będą.")
     ]

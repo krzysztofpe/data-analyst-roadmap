@@ -6,12 +6,14 @@ enum DailyReminder: String, CaseIterable {
     case morning = "ogarnito.reminder.morning"
     case meal = "ogarnito.reminder.meal"
     case evening = "ogarnito.reminder.evening"
+    case winddown = "ogarnito.reminder.winddown"
 
     var title: String {
         switch self {
         case .morning: return "☀️ Zaplanuj dzień"
         case .meal: return "🍽️ Przerwa na jedzenie"
         case .evening: return "🌙 Domknij dzień"
+        case .winddown: return "😴 Zwalniamy"
         }
     }
 
@@ -20,6 +22,7 @@ enum DailyReminder: String, CaseIterable {
         case .morning: return "Wybierz żabę 🐸 i trzy zadania. Reszta to bonus."
         case .meal: return "Serio — czas coś zjeść. Odhacz posiłek w Ogarnito."
         case .evening: return "Sprawdź nawyki i zobacz dzisiejsze zwycięstwa. Było lepiej, niż myślisz."
+        case .winddown: return "Odłóż telefon. Mózg potrzebuje ciemności i ciszy, żeby ruszyła melatonina — scroll odsuwa to o godziny."
         }
     }
 

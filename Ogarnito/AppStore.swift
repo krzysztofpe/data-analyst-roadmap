@@ -12,6 +12,16 @@ final class AppStore: ObservableObject {
     @Published var confettiBurst: Int = 0
     @Published var selectedTab: Tab = .now
     @Published var showBreathing = false
+    /// Pełnoekranowa interwencja, gdy łapiesz się na bezmyślnym scrollowaniu.
+    @Published var showScreenBreak = false
+    /// Godzina, od której apka przechodzi w tryb wieczorny.
+    @Published var eveningHour: Int {
+        didSet { UserDefaults.standard.set(eveningHour, forKey: "eveningHour") }
+    }
+    /// Ocieplenie ekranu wieczorem — mniej niebieskiego światła z tej aplikacji.
+    @Published var eveningTint: Bool {
+        didSet { UserDefaults.standard.set(eveningTint, forKey: "eveningTint") }
+    }
     /// Ustawiane z innych widoków, żeby timer sam wystartował z zadaną liczbą minut.
     @Published var timerRequest: Int?
     /// Zadanie, nad którym trwa sesja skupienia — timer nie wisi w próżni.
@@ -40,11 +50,75 @@ final class AppStore: ObservableObject {
     ]
 
     init() {
-        let savedGoal = UserDefaults.standard.integer(forKey: "dailyGoal")
+        let defaults = UserDefaults.standard
+        let savedGoal = defaults.integer(forKey: "dailyGoal")
         dailyGoal = (1...5).contains(savedGoal) ? savedGoal : 3
+        let savedHour = defaults.integer(forKey: "eveningHour")
+        eveningHour = (17...23).contains(savedHour) ? savedHour : 21
+        eveningTint = defaults.object(forKey: "eveningTint") as? Bool ?? true
         load()
         checkReturn()
         drainInbox()
+    }
+
+    // MARK: - Wieczór, ekran i sen
+
+    /// Wieczór trwa od ustawionej godziny do 5 rano.
+    var isEvening: Bool {
+        let h = Calendar.current.component(.hour, from: Date())
+        return h >= eveningHour || h < 5
+    }
+
+    /// Ile godzin zostało do wyciszenia — do komunikatu w widoku „Życie".
+    var hoursToEvening: Int {
+        let h = Calendar.current.component(.hour, from: Date())
+        return h < eveningHour ? eveningHour - h : 0
+    }
+
+    var scrollCatchesToday: Int { todayCare.scrollCatches ?? 0 }
+
+    /// Przyłapanie się na scrollu jest sukcesem, nie wpadką — i tak je nagradzamy.
+    func catchScroll() {
+        let key = Dates.dayKey()
+        var c = care[key] ?? DayCare()
+        c.scrollCatches = (c.scrollCatches ?? 0) + 1
+        care[key] = c
+        reward(7, big: false)
+    }
+
+    var windDownToday: Set<String> { todayCare.winddown ?? [] }
+
+    var windDownDone: Bool { windDownToday.count == WindDownStep.allCases.count }
+
+    func toggleWindDown(_ step: WindDownStep) {
+        let key = Dates.dayKey()
+        var c = care[key] ?? DayCare()
+        var done = c.winddown ?? []
+        if done.contains(step.rawValue) {
+            done.remove(step.rawValue)
+            c.winddown = done
+            care[key] = c
+            save()
+        } else {
+            done.insert(step.rawValue)
+            c.winddown = done
+            care[key] = c
+            if done.count == WindDownStep.allCases.count {
+                reward(12, big: true)
+                showPraise("🌙 Dobranoc. Zrobiłeś dziś wystarczająco.")
+            } else {
+                reward(2, big: false)
+            }
+        }
+    }
+
+    /// Skrót „przerwij scroll" tylko odkłada flagę — ekran otwieramy dopiero,
+    /// gdy aplikacja jest na wierzchu.
+    func consumePendingScreenBreak() {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "pendingScreenBreak") else { return }
+        defaults.set(false, forKey: "pendingScreenBreak")
+        showScreenBreak = true
     }
 
     // MARK: - Powrót po przerwie

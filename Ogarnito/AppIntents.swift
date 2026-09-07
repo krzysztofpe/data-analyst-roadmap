@@ -20,6 +20,22 @@ struct AddTaskIntent: AppIntent {
     }
 }
 
+/// „Hej Siri, przerwij scroll" — wywołasz to, siedząc w reelsach, bez szukania
+/// aplikacji. Właśnie wtedy jest potrzebne, a nie wtedy, gdy już tu jesteś.
+struct StopScrollIntent: AppIntent {
+    static var title: LocalizedStringResource = "Przerwij scrollowanie"
+    static var description = IntentDescription(
+        "Otwiera Ogarnito na ekranie przerwania scrolla: oddech i pytanie, czego naprawdę teraz potrzebujesz."
+    )
+    /// Tutaj otwarcie apki jest sensem działania — chodzi o wyrwanie z pętli.
+    static var openAppWhenRun: Bool = true
+
+    func perform() async throws -> some IntentResult {
+        UserDefaults.standard.set(true, forKey: "pendingScreenBreak")
+        return .result()
+    }
+}
+
 struct OgarnitoShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
@@ -31,6 +47,16 @@ struct OgarnitoShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Dodaj zadanie",
             systemImageName: "plus.circle.fill"
+        )
+        AppShortcut(
+            intent: StopScrollIntent(),
+            phrases: [
+                "Przerwij scroll w \(.applicationName)",
+                "Przyłapałem się w \(.applicationName)",
+                "Stop scroll w \(.applicationName)"
+            ],
+            shortTitle: "Przerwij scrollowanie",
+            systemImageName: "hand.raised.fill"
         )
     }
 }

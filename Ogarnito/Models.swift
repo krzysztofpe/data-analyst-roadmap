@@ -47,6 +47,27 @@ struct DayCare: Codable, Hashable {
     var water: Int = 0
     /// Opcjonalne z tego samego powodu co `focusMinutes` w zadaniu.
     var focus: Int?
+    /// Ile razy dziś przerwałeś scrollowanie — liczymy wygrane, nie porażki.
+    var scrollCatches: Int?
+    /// Odhaczone kroki wieczornego rytuału.
+    var winddown: Set<String>?
+}
+
+/// Kroki wieczornego rytuału. Kolejność ma znaczenie: od telefonu do łóżka.
+enum WindDownStep: String, CaseIterable, Identifiable {
+    case phone, frog, light, night, water
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .phone: return "📵 Telefon ładuje się poza sypialnią"
+        case .frog:  return "🐸 Jutrzejsza żaba wybrana"
+        case .light: return "💡 Duże światło zgaszone"
+        case .night: return "🌙 Night Shift włączony"
+        case .water: return "💧 Woda przy łóżku"
+        }
+    }
 }
 
 // MARK: - Czas

@@ -40,6 +40,36 @@ struct RootView: View {
         .fullScreenCover(isPresented: $store.showBreathing) {
             BreathingView()
         }
+        // Osobny poziom hierarchii — dwa fullScreenCover na jednym widoku
+        // wykluczają się nawzajem.
+        .modifier(EveningTint())
+        .fullScreenCover(isPresented: $store.showScreenBreak) {
+            ScreenBreakView()
+        }
+    }
+}
+
+/// Wieczorne wyciszenie: ciepła warstwa na całej aplikacji od ustawionej
+/// godziny. Nie zastępuje systemowego Night Shift, ale realnie ścina niebieską
+/// składową tego, co świeci Ci w twarz z tej apki.
+struct EveningTint: ViewModifier {
+    @EnvironmentObject var store: AppStore
+
+    func body(content: Content) -> some View {
+        content.overlay(
+            // Tylko warstwa odświeża się co minutę — opakowanie całej aplikacji
+            // w TimelineView przeliczałoby co minutę cały interfejs.
+            TimelineView(.everyMinute) { _ in
+                let on = store.eveningTint && store.isEvening
+                Rectangle()
+                    .fill(Color(hex: 0xFF7A18))
+                    .opacity(on ? 0.17 : 0)
+                    .blendMode(.multiply)
+                    .allowsHitTesting(false)
+                    .ignoresSafeArea()
+                    .animation(.easeInOut(duration: 0.8), value: on)
+            }
+        )
     }
 }
 
@@ -124,6 +154,7 @@ struct PraiseBanner: View {
 }
 
 struct ConfettiOverlay: View {
+    @EnvironmentObject var store: AppStore
     let trigger: Int
     @State private var particles: [Particle] = []
     /// Konfetti to nagroda, ale dla części osób ruch na ekranie jest męczący
@@ -154,7 +185,9 @@ struct ConfettiOverlay: View {
     }
 
     private func spawn() {
-        guard !reduceMotion else { return }
+        // Wieczorem nagroda jest cicha — migające konfetti tuż przed snem
+        // pobudza dokładnie wtedy, kiedy chcemy zwalniać.
+        guard !reduceMotion, !(store.eveningTint && store.isEvening) else { return }
         let emojis = ["🎉", "✨", "⭐", "💜", "🎊", "💥"]
         let batch = (0..<18).map { _ in
             Particle(
